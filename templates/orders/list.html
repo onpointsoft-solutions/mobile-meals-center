@@ -59,7 +59,7 @@
                                     {% for item in order.items.all|slice:":2" %}
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <span class="small">{{ item.quantity }}x {{ item.meal.name }}</span>
-                                        <span class="small text-muted">${{ item.total }}</span>
+                                        <span class="small text-muted">KES{{ item.total }}</span>
                                     </div>
                                     {% endfor %}
                                     {% if order.items.count > 2 %}
@@ -69,7 +69,7 @@
                                 
                                 <!-- Total and Status -->
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span class="fw-bold">Total: ${{ order.total }}</span>
+                                    <span class="fw-bold">Total: KES{{ order.total }}</span>
                                     {% if order.status == 'preparing' %}
                                     <small class="text-primary">
                                         <i class="bi bi-clock-history me-1"></i>

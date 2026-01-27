@@ -191,7 +191,7 @@
                                     </td>
                                     <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
                                     <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
-                                    <td class="fw-bold">${{ order.total }}</td>
+                                    <td class="fw-bold">KES{{ order.total }}</td>
                                     <td>
                                         <span class="badge 
                                             {% if order.status == 'pending' %}bg-warning
@@ -261,7 +261,7 @@
                                 <div class="flex-fill">
                                     <h6 class="mb-1">{{ meal.name }}</h6>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted small">${{ meal.price }}</span>
+                                        <span class="text-muted small">KES{{ meal.price }}</span>
                                         <span class="badge {% if meal.is_available %}bg-success{% else %}bg-secondary{% endif %}">
                                             {% if meal.is_available %}Available{% else %}Unavailable{% endif %}
                                         </span>

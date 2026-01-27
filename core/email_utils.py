@@ -58,7 +58,7 @@ def send_restaurant_notification_email(order, payment):
     Send new order notification to restaurant
     """
     try:
-        restaurant = order.items.first().meal.restaurant
+        restaurant = order.restaurant
         
         # Calculate totals for email
         subtotal = order.total_amount
@@ -75,48 +75,36 @@ def send_restaurant_notification_email(order, payment):
             'total_amount': total_amount,
         }
         
-        # Create simple notification email for restaurant
-        subject = f'New Order #{order.order_number} - {restaurant.name}'
+        # Create notification email for restaurant
+        subject = f'🔔 NEW ORDER #{order.order_number} - {restaurant.name}'
         
-        # Simple text email for restaurant
-        message = f"""
-New Order Received!
-
-Order Number: {order.order_number}
-Customer: {order.customer.get_full_name()}
-Phone: {order.phone}
-Address: {order.delivery_address}
-Payment Method: {payment.get_payment_method_display()}
-
-Order Items:
-"""
-        for item in order.items.all():
-            message += f"- {item.quantity}x {item.meal.name} (${item.total})\n"
+        # Render email templates
+        text_content = render_to_string('emails/restaurant_notification.txt', context)
+        html_content = render_to_string('emails/restaurant_notification.html', context)
         
-        message += f"""
-Total Amount: ${total_amount:.2f}
-
-Please prepare this order for delivery.
-
----
-Mobile Meals Center
-"""
+        # Get restaurant email - try multiple sources
+        restaurant_email = None
         
-        # Send to restaurant owner/manager
-        # Note: You might want to add an email field to the Restaurant model
-        # For now, we'll use a placeholder or skip if no email
-        restaurant_email = getattr(restaurant, 'email', None)
-        if not restaurant_email:
-            # Try to get restaurant owner's email
-            restaurant_email = getattr(restaurant.owner, 'email', None)
+        # 1. Check if restaurant has email field
+        if hasattr(restaurant, 'email') and restaurant.email:
+            restaurant_email = restaurant.email
+        # 2. Try to get restaurant owner's email
+        elif hasattr(restaurant, 'owner') and restaurant.owner and restaurant.owner.email:
+            restaurant_email = restaurant.owner.email
+        # 3. Try to get user who created the restaurant
+        elif hasattr(restaurant, 'user') and restaurant.user and restaurant.user.email:
+            restaurant_email = restaurant.user.email
         
         if restaurant_email:
             email = EmailMultiAlternatives(
                 subject=subject,
-                body=message,
+                body=text_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[restaurant_email],
             )
+            
+            # Attach HTML version
+            email.attach_alternative(html_content, "text/html")
             
             email.send()
             logger.info(f"Restaurant notification email sent to {restaurant_email} for order {order.order_number}")

@@ -66,8 +66,8 @@
                 <div class="col-lg-7">
                     <div class="secure-payment">
                         <i class="bi bi-shield-check display-6 mb-2"></i>
-                        <h5 class="mb-1">Secure Payment</h5>
-                        <small>Your payment information is encrypted and secure</small>
+                        <h5 class="mb-1">Secure & Convenient</h5>
+                        <small>Your order is safe with us. Pay cash on delivery!</small>
                     </div>
                     
                     <!-- Payment Method Selection -->
@@ -79,46 +79,54 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <!-- Cash on Delivery - Primary Option -->
+                                <div class="col-md-12">
                                     <div class="form-check payment-method-option">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cardPayment" value="card" checked>
-                                        <label class="form-check-label w-100" for="cardPayment">
-                                            <div class="d-flex align-items-center p-3 border rounded">
-                                                <i class="bi bi-credit-card fs-4 text-primary me-3"></i>
-                                                <div>
-                                                    <strong>Credit/Debit Card</strong>
-                                                    <div class="small text-muted">Visa, Mastercard, American Express</div>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check payment-method-option">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" id="mpesaPayment" value="mpesa">
-                                        <label class="form-check-label w-100" for="mpesaPayment">
-                                            <div class="d-flex align-items-center p-3 border rounded">
-                                                <i class="bi bi-phone fs-4 text-success me-3"></i>
-                                                <div>
-                                                    <strong>M-Pesa</strong>
-                                                    <div class="small text-muted">Pay with your mobile money</div>
-                                                </div>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-check payment-method-option">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="cash">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="cash" checked>
                                         <label class="form-check-label w-100" for="cashOnDelivery">
-                                            <div class="d-flex align-items-center p-3 border rounded">
-                                                <i class="bi bi-cash-coin fs-4 text-warning me-3"></i>
-                                                <div>
-                                                    <strong>Pay on Delivery</strong>
-                                                    <div class="small text-muted">Cash payment on delivery</div>
+                                            <div class="d-flex align-items-center p-4 border border-success rounded bg-light">
+                                                <i class="bi bi-cash-coin fs-3 text-success me-3"></i>
+                                                <div class="flex-grow-1">
+                                                    <strong class="fs-5">Pay on Delivery</strong>
+                                                    <div class="text-muted">Cash payment when your order arrives</div>
+                                                    <span class="badge bg-success mt-2">Available Now</span>
                                                 </div>
+                                                <i class="bi bi-check-circle-fill fs-4 text-success"></i>
                                             </div>
                                         </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Coming Soon Options -->
+                                <div class="col-12 mt-4">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="bi bi-clock-history me-2"></i>Coming Soon
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="position-relative">
+                                        <div class="d-flex align-items-center p-3 border rounded opacity-50">
+                                            <i class="bi bi-credit-card fs-4 text-muted me-3"></i>
+                                            <div>
+                                                <strong>Credit/Debit Card</strong>
+                                                <div class="small text-muted">Visa, Mastercard, Amex</div>
+                                            </div>
+                                        </div>
+                                        <span class="position-absolute top-0 end-0 badge bg-warning m-2">Coming Soon</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="position-relative">
+                                        <div class="d-flex align-items-center p-3 border rounded opacity-50">
+                                            <i class="bi bi-phone fs-4 text-muted me-3"></i>
+                                            <div>
+                                                <strong>M-Pesa</strong>
+                                                <div class="small text-muted">Mobile money payment</div>
+                                            </div>
+                                        </div>
+                                        <span class="position-absolute top-0 end-0 badge bg-warning m-2">Coming Soon</span>
                                     </div>
                                 </div>
                             </div>

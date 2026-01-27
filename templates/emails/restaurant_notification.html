@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order - {{ restaurant.name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .urgent-banner {
+            background: #ffc107;
+            color: #000;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .order-info {
+            background: #e7f3ff;
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .customer-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .order-details {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .order-details th,
+        .order-details td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .order-details th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .total-row {
+            background: #d4edda;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .footer {
+            background: #343a40;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .payment-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .payment-cash {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .payment-card {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="urgent-banner">
+            🔔 NEW ORDER ALERT!
+        </div>
+        
+        <div class="header">
+            <h1>📦 New Order Received</h1>
+            <p>{{ restaurant.name }}</p>
+        </div>
+        
+        <div class="content">
+            <h2>Order #{{ order.order_number }}</h2>
+            <p><strong>Order Time:</strong> {{ order.created_at|date:"F d, Y \a\t g:i A" }}</p>
+            
+            <div class="customer-info">
+                <h3>👤 Customer Information</h3>
+                <p><strong>Name:</strong> {{ order.customer.get_full_name }}</p>
+                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                <p><strong>Email:</strong> {{ order.customer.email }}</p>
+                <p><strong>Delivery Address:</strong><br>{{ order.delivery_address }}</p>
+                {% if order.special_instructions %}
+                <p><strong>⚠️ Special Instructions:</strong><br>{{ order.special_instructions }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="order-info">
+                <h3>💳 Payment Information</h3>
+                <p><strong>Payment Method:</strong> 
+                    <span class="payment-badge {% if payment.payment_method == 'cash_on_delivery' %}payment-cash{% else %}payment-card{% endif %}">
+                        {{ payment.get_payment_method_display }}
+                    </span>
+                </p>
+                {% if payment.payment_method == 'cash_on_delivery' %}
+                <p><strong>⚠️ Note:</strong> Customer will pay cash on delivery</p>
+                {% else %}
+                <p><strong>Status:</strong> Payment confirmed</p>
+                {% endif %}
+            </div>
+            
+            <h3>🍽️ Order Items</h3>
+            <table class="order-details" width="100%">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td><strong>{{ item.meal.name }}</strong></td>
+                        <td>{{ item.quantity }}</td>
+                        <td>KES{{ item.meal.price }}</td>
+                        <td>KES{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3"><strong>Subtotal:</strong></td>
+                        <td><strong>KES{{ order.total_amount }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"><strong>Delivery Fee:</strong></td>
+                        <td><strong>KES3.99</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"><strong>Tax (8%):</strong></td>
+                        <td><strong>KES{{ tax_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3"><strong>TOTAL AMOUNT:</strong></td>
+                        <td><strong>KES{{ total_amount|floatformat:2 }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="action-buttons">
+                <a href="http://127.0.0.1:8000/orders/{{ order.id }}/" class="btn">View Order Details</a>
+                <a href="http://127.0.0.1:8000/restaurants/dashboard/" class="btn btn-secondary">Go to Dashboard</a>
+            </div>
+            
+            <div class="order-info">
+                <h3>⏰ Next Steps</h3>
+                <ol>
+                    <li><strong>Confirm the order</strong> in your dashboard</li>
+                    <li><strong>Prepare the food</strong> - Estimated time: 30-45 minutes</li>
+                    <li><strong>Mark as ready</strong> when the order is complete</li>
+                    <li><strong>Coordinate with delivery</strong> for pickup</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Mobile Meals Center - Restaurant Partner</strong></p>
+            <p>📧 mobilemealscenter@gmail.com | 📞 +254702502952</p>
+            <p>Need help? Contact our restaurant support team</p>
+        </div>
+    </div>
+</body>
+</html>

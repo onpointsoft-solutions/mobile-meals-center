@@ -34,6 +34,23 @@ class OrderDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         order = self.get_object()
         user = self.request.user
         return user == order.customer or (user.is_restaurant and user.restaurant == order.restaurant)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.get_object()
+        
+        # Calculate order totals
+        subtotal = order.total_amount
+        delivery_fee = Decimal('3.99')
+        subtotal_with_delivery = subtotal + delivery_fee
+        tax_amount = subtotal_with_delivery * Decimal('0.08')
+        final_total = subtotal_with_delivery + tax_amount
+        
+        context['delivery_fee'] = delivery_fee
+        context['tax_amount'] = tax_amount
+        context['final_total'] = final_total
+        
+        return context
 
 
 class CartView(LoginRequiredMixin, TemplateView):

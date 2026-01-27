@@ -1,0 +1,52 @@
+NEW ORDER ALERT - {{ restaurant.name }}
+=====================================
+
+Order Number: {{ order.order_number }}
+Order Time: {{ order.created_at|date:"F d, Y \a\t g:i A" }}
+
+CUSTOMER INFORMATION
+--------------------
+Name: {{ order.customer.get_full_name }}
+Phone: {{ order.phone }}
+Email: {{ order.customer.email }}
+Delivery Address: {{ order.delivery_address }}
+{% if order.special_instructions %}
+Special Instructions: {{ order.special_instructions }}
+{% endif %}
+
+PAYMENT INFORMATION
+-------------------
+Payment Method: {{ payment.get_payment_method_display }}
+{% if payment.payment_method == 'cash_on_delivery' %}
+⚠️ Note: Customer will pay cash on delivery
+{% else %}
+Status: Payment confirmed
+{% endif %}
+
+ORDER ITEMS
+-----------
+{% for item in order.items.all %}
+{{ item.quantity }}x {{ item.meal.name }} - KES{{ item.total }}
+{% endfor %}
+
+TOTAL BREAKDOWN
+---------------
+Subtotal: KES{{ order.total_amount }}
+Delivery Fee: KES3.99
+Tax (8%): KES{{ tax_amount|floatformat:2 }}
+-----------------
+TOTAL: KES{{ total_amount|floatformat:2 }}
+
+NEXT STEPS
+----------
+1. Confirm the order in your dashboard
+2. Prepare the food (Estimated time: 30-45 minutes)
+3. Mark as ready when the order is complete
+4. Coordinate with delivery for pickup
+
+View Order: http://127.0.0.1:8000/orders/{{ order.id }}/
+Dashboard: http://127.0.0.1:8000/restaurants/dashboard/
+
+---
+Mobile Meals Center - Restaurant Partner
+📧 mobilemealscenter@gmail.com | 📞 +254702502952

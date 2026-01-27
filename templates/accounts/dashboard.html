@@ -108,7 +108,7 @@
                                                         {{ order.get_status_display }}
                                                     </span>
                                                 </td>
-                                                <td>${{ order.total_amount }}</td>
+                                                <td>KES{{ order.total_amount }}</td>
                                                 <td>{{ order.created_at|date:"M d, Y" }}</td>
                                                 <td>
                                                     <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-primary">
@@ -149,7 +149,7 @@
                                     {% endif %}
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1">{{ meal.name }}</h6>
-                                        <small class="text-muted">${{ meal.price }}</small>
+                                        <small class="text-muted">KES{{ meal.price }}</small>
                                     </div>
                                     <div class="btn-group btn-group-sm">
                                         <a href="{% url 'meals:edit' meal.pk %}" class="btn btn-outline-primary">
@@ -227,7 +227,7 @@
                                                     {{ order.get_status_display }}
                                                 </span>
                                             </td>
-                                            <td>${{ order.total_amount }}</td>
+                                            <td>KES{{ order.total_amount }}</td>
                                             <td>{{ order.created_at|date:"M d, Y" }}</td>
                                             <td>
                                                 <a href="{% url 'orders:detail' order.pk %}" class="btn btn-sm btn-outline-primary">

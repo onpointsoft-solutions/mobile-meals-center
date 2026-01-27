@@ -149,15 +149,15 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Email Configuration
 # For development, use console backend to see emails in terminal
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # For production, use SMTP (uncomment and configure)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mobilemealscenter@gmail.com'
+EMAIL_HOST_PASSWORD = 'bscc byhk wwgp odga'
 
 # Default email settings
 DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemeals.com>'

@@ -51,7 +51,7 @@ class Payment(models.Model):
         ordering = ['-created_at']
     
     def __str__(self):
-        return f"Payment {self.id} - {self.order.order_number} - ${self.amount}"
+        return f"Payment {self.id} - {self.order.order_number} - KES{self.amount}"
     
     @property
     def is_successful(self):
