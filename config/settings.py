@@ -160,8 +160,8 @@ EMAIL_HOST_USER = 'mobilemealscenter@gmail.com'
 EMAIL_HOST_PASSWORD = 'bscc byhk wwgp odga'
 
 # Default email settings
-DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemeals.com>'
-ADMINS = [('Admin', 'admin@mobilemeals.com')]
+DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemealscenter.com>'
+ADMINS = [('Admin', 'admin@mobilemealscenter.com')]
 MANAGERS = ADMINS
 
 # Stripe Configuration
