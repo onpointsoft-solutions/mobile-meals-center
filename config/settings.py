@@ -87,8 +87,16 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mobile_meals_db',
+        'USER': 'root',
+        'PASSWORD': '',  # Set your MySQL password here
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 
@@ -161,7 +169,7 @@ EMAIL_HOST_PASSWORD = 'bscc byhk wwgp odga'
 
 # Default email settings
 DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemealscenter.com>'
-ADMINS = [('Admin', 'admin@mobilemealscenter.com')]
+ADMINS = [('Admin', 'admin@mobilemealscenter.co.ke')]
 MANAGERS = ADMINS
 
 # Stripe Configuration
@@ -174,3 +182,162 @@ STRIPE_WEBHOOK_SECRET = 'whsec_1234567890abcdef'  # Replace with your webhook se
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging Configuration
+# https://docs.djangoproject.com/en/5.0/topics/logging/
+
+import os
+
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / 'logs'
+if not os.path.exists(LOGS_DIR):
+    os.makedirs(LOGS_DIR)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name} {module} {funcName} - {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'simple': {
+            'format': '[{levelname}] {asctime} - {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file_general': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'general.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'file_errors': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'file_orders': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'orders.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
+        'file_payments': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'payments.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
+        'file_emails': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'emails.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
+        'file_security': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'security.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'file_database': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'database.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10 MB
+            'backupCount': 3,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file_general', 'file_errors'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['file_errors', 'console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console', 'file_general'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['file_database'],
+            'level': 'WARNING',  # Set to DEBUG to log all SQL queries
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['file_security', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'orders': {
+            'handlers': ['file_orders', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'payments': {
+            'handlers': ['file_payments', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'core.email_utils': {
+            'handlers': ['file_emails', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts': {
+            'handlers': ['file_general', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'restaurants': {
+            'handlers': ['file_general', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'meals': {
+            'handlers': ['file_general', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file_general', 'file_errors'],
+        'level': 'INFO',
+    },
+}
