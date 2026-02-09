@@ -262,9 +262,17 @@
                                     <h6 class="mb-1">{{ meal.name }}</h6>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="text-muted small">KES{{ meal.price }}</span>
-                                        <span class="badge {% if meal.is_available %}bg-success{% else %}bg-secondary{% endif %}">
-                                            {% if meal.is_available %}Available{% else %}Unavailable{% endif %}
-                                        </span>
+                                        <div>
+                                            <span class="badge {% if meal.is_available %}bg-success{% else %}bg-secondary{% endif %} me-2">
+                                                {% if meal.is_available %}Available{% else %}Unavailable{% endif %}
+                                            </span>
+                                            <a href="{% url 'meals:edit' pk=meal.pk %}" class="btn btn-sm btn-outline-primary me-1" title="Edit Meal">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'meals:delete' pk=meal.pk %}" class="btn btn-sm btn-outline-danger" title="Delete Meal">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -294,12 +302,59 @@
 </div>
 
 <script>
-function updateOrderStatus(orderId, status) {
-    if (confirm('Are you sure you want to update this order status?')) {
-        // This would typically make an AJAX call to update the order status
-        // For now, we'll redirect to the order detail page
-        window.location.href = `/orders/${orderId}/`;
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
     }
+    return cookieValue;
+}
+
+function updateOrderStatus(orderId, status) {
+    const statusMessages = {
+        'confirmed': 'confirm this order',
+        'preparing': 'mark this order as preparing',
+        'ready': 'mark this order as ready for pickup/delivery',
+        'out_for_delivery': 'mark this order as out for delivery',
+        'delivered': 'mark this order as delivered'
+    };
+    
+    const message = statusMessages[status] || 'update this order status';
+    
+    if (!confirm(`Are you sure you want to ${message}?`)) {
+        return;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`/orders/${orderId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        body: `status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated status
+            location.reload();
+        } else {
+            alert('Error updating order status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update order status. Please try again.');
+    });
 }
 </script>
 {% endblock %}

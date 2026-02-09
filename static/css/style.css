@@ -859,6 +859,131 @@ h6 { font-size: 1rem; }
     box-shadow: var(--shadow-lg);
 }
 
+/* Floating Food Animations */
+.floating-foods {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.food-emoji {
+    position: absolute;
+    font-size: 3rem;
+    opacity: 0.8;
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.food-1 {
+    top: 10%;
+    left: 10%;
+    animation-name: float1;
+    animation-duration: 4s;
+}
+
+.food-2 {
+    top: 20%;
+    right: 15%;
+    animation-name: float2;
+    animation-duration: 5s;
+    animation-delay: 0.5s;
+}
+
+.food-3 {
+    top: 50%;
+    left: 5%;
+    animation-name: float3;
+    animation-duration: 4.5s;
+    animation-delay: 1s;
+}
+
+.food-4 {
+    top: 60%;
+    right: 10%;
+    animation-name: float4;
+    animation-duration: 5.5s;
+    animation-delay: 0.3s;
+}
+
+.food-5 {
+    top: 30%;
+    left: 50%;
+    animation-name: float5;
+    animation-duration: 4.2s;
+    animation-delay: 0.8s;
+}
+
+.food-6 {
+    top: 70%;
+    left: 20%;
+    animation-name: float6;
+    animation-duration: 4.8s;
+    animation-delay: 1.2s;
+}
+
+.food-7 {
+    top: 40%;
+    right: 25%;
+    animation-name: float7;
+    animation-duration: 5.2s;
+    animation-delay: 0.6s;
+}
+
+.food-8 {
+    top: 80%;
+    right: 30%;
+    animation-name: float8;
+    animation-duration: 4.6s;
+    animation-delay: 1.5s;
+}
+
+@keyframes float1 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes float2 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-25px) rotate(-5deg); }
+}
+
+@keyframes float3 {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    50% { transform: translateX(15px) translateY(-15px); }
+}
+
+@keyframes float4 {
+    0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+    50% { transform: translateX(-10px) translateY(-20px) scale(1.1); }
+}
+
+@keyframes float5 {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    33% { transform: translateY(-15px) rotate(3deg); }
+    66% { transform: translateY(-10px) rotate(-3deg); }
+}
+
+@keyframes float6 {
+    0%, 100% { transform: translateX(0) scale(1); }
+    50% { transform: translateX(20px) scale(1.05); }
+}
+
+@keyframes float7 {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-10px) translateX(10px); }
+    75% { transform: translateY(-15px) translateX(-10px); }
+}
+
+@keyframes float8 {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    50% { transform: translateY(-18px) rotate(8deg) scale(1.08); }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero-section {

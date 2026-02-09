@@ -1,15 +1,17 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.http import JsonResponse
 from django.db import transaction
-from .models import Order, OrderItem
-from .forms import OrderForm, OrderStatusForm
-from meals.models import Meal
+from django.http import JsonResponse
 from decimal import Decimal
+import logging
+from .models import Order, OrderItem
+from .forms import OrderForm
+from meals.models import Meal
 
+logger = logging.getLogger(__name__)
 
 class OrderListView(LoginRequiredMixin, ListView):
     model = Order
@@ -89,8 +91,116 @@ class AddToCartView(LoginRequiredMixin, View):
         cart[str(meal_id)] = cart.get(str(meal_id), 0) + quantity
         request.session['cart'] = cart
         
+        logger.info(f'Added {quantity} of meal {meal_id} to cart for user {request.user.username}')
         messages.success(request, f'{meal.name} added to cart!')
         return redirect('orders:cart')
+
+
+class UpdateCartView(LoginRequiredMixin, View):
+    """Update quantity of item in cart via AJAX"""
+    def post(self, request, meal_id):
+        try:
+            meal = get_object_or_404(Meal, id=meal_id, is_available=True)
+            action = request.POST.get('action', 'set')  # 'set', 'increment', 'decrement'
+            
+            cart = request.session.get('cart', {})
+            meal_id_str = str(meal_id)
+            
+            if action == 'increment':
+                cart[meal_id_str] = cart.get(meal_id_str, 0) + 1
+            elif action == 'decrement':
+                current_qty = cart.get(meal_id_str, 0)
+                if current_qty > 1:
+                    cart[meal_id_str] = current_qty - 1
+                else:
+                    # Remove item if quantity would be 0
+                    cart.pop(meal_id_str, None)
+            else:  # set
+                quantity = int(request.POST.get('quantity', 1))
+                if quantity > 0:
+                    cart[meal_id_str] = quantity
+                else:
+                    cart.pop(meal_id_str, None)
+            
+            request.session['cart'] = cart
+            request.session.modified = True
+            
+            # Calculate new totals
+            cart_total = Decimal('0.00')
+            cart_count = 0
+            for mid, qty in cart.items():
+                try:
+                    m = Meal.objects.get(id=mid, is_available=True)
+                    cart_total += m.price * qty
+                    cart_count += qty
+                except Meal.DoesNotExist:
+                    pass
+            
+            item_quantity = cart.get(meal_id_str, 0)
+            item_total = meal.price * item_quantity if item_quantity > 0 else Decimal('0.00')
+            
+            logger.info(f'Updated cart for user {request.user.username}: meal {meal_id}, action {action}')
+            
+            return JsonResponse({
+                'success': True,
+                'item_quantity': item_quantity,
+                'item_total': float(item_total),
+                'cart_total': float(cart_total),
+                'cart_count': cart_count,
+                'message': 'Cart updated successfully'
+            })
+            
+        except Exception as e:
+            logger.error(f'Error updating cart: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
+
+
+class RemoveFromCartView(LoginRequiredMixin, View):
+    """Remove item from cart"""
+    def post(self, request, meal_id):
+        try:
+            cart = request.session.get('cart', {})
+            meal_id_str = str(meal_id)
+            
+            if meal_id_str in cart:
+                del cart[meal_id_str]
+                request.session['cart'] = cart
+                request.session.modified = True
+                
+                # Calculate new totals
+                cart_total = Decimal('0.00')
+                cart_count = 0
+                for mid, qty in cart.items():
+                    try:
+                        m = Meal.objects.get(id=mid, is_available=True)
+                        cart_total += m.price * qty
+                        cart_count += qty
+                    except Meal.DoesNotExist:
+                        pass
+                
+                logger.info(f'Removed meal {meal_id} from cart for user {request.user.username}')
+                
+                return JsonResponse({
+                    'success': True,
+                    'cart_total': float(cart_total),
+                    'cart_count': cart_count,
+                    'message': 'Item removed from cart'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Item not found in cart'
+                }, status=404)
+                
+        except Exception as e:
+            logger.error(f'Error removing from cart: {str(e)}')
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            }, status=400)
 
 
 class OrderCreateView(LoginRequiredMixin, CreateView):
@@ -168,13 +278,45 @@ class UpdateOrderStatusView(LoginRequiredMixin, UserPassesTestMixin, View):
         return self.request.user.is_restaurant and self.request.user.restaurant == order.restaurant
     
     def post(self, request, pk):
-        order = get_object_or_404(Order, pk=pk)
-        form = OrderStatusForm(request.POST, instance=order)
-        
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Order status updated successfully!')
-        else:
-            messages.error(request, 'Error updating order status.')
-        
-        return redirect('orders:detail', pk=order.pk)
+        try:
+            order = get_object_or_404(Order, pk=pk)
+            new_status = request.POST.get('status')
+            
+            if new_status in dict(Order.STATUS_CHOICES):
+                old_status = order.status
+                order.status = new_status
+                order.save()
+                
+                logger.info(f'Order {order.order_number} status updated from {old_status} to {new_status} by {request.user.username}')
+                
+                # Return JSON response for AJAX calls
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Order status updated to {order.get_status_display()}',
+                        'new_status': new_status,
+                        'new_status_display': order.get_status_display()
+                    })
+                
+                messages.success(request, f'Order status updated to {order.get_status_display()}')
+                return redirect('orders:detail', pk=pk)
+            else:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid status'
+                    }, status=400)
+                
+                messages.error(request, 'Invalid status')
+                return redirect('orders:detail', pk=pk)
+                
+        except Exception as e:
+            logger.error(f'Error updating order status: {str(e)}')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                return JsonResponse({
+                    'success': False,
+                    'message': str(e)
+                }, status=400)
+            
+            messages.error(request, 'Failed to update order status')
+            return redirect('orders:detail', pk=pk)

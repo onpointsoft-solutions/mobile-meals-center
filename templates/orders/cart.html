@@ -143,19 +143,119 @@
 
 {% block extra_js %}
 <script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function updateQuantity(mealId, change) {
-    // This would typically make an AJAX call to update the cart
-    // For now, we'll just reload the page
-    console.log('Update quantity for meal', mealId, 'by', change);
-    // Implementation would go here
+    const csrftoken = getCookie('csrftoken');
+    const action = change > 0 ? 'increment' : 'decrement';
+    
+    fetch(`/orders/update-cart/${mealId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        body: `action=${action}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.item_quantity === 0) {
+                // Item was removed, reload page
+                location.reload();
+            } else {
+                // Update the quantity display
+                const quantityInput = document.querySelector(`button[onclick*="${mealId}"]`).parentElement.querySelector('input');
+                if (quantityInput) {
+                    quantityInput.value = data.item_quantity;
+                }
+                
+                // Update item total
+                const itemRow = document.querySelector(`button[onclick*="${mealId}"]`).closest('.d-flex');
+                const itemTotalElement = itemRow.querySelector('.fw-bold');
+                if (itemTotalElement) {
+                    itemTotalElement.textContent = 'KES' + data.item_total.toFixed(2);
+                }
+                
+                // Update cart totals
+                updateCartTotals(data.cart_total);
+            }
+        } else {
+            alert('Error updating cart: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update cart. Please try again.');
+    });
 }
 
 function removeFromCart(mealId) {
-    if (confirm('Remove this item from your cart?')) {
-        // This would typically make an AJAX call to remove the item
-        // For now, we'll just reload the page
-        console.log('Remove meal', mealId, 'from cart');
-        // Implementation would go here
+    if (!confirm('Remove this item from your cart?')) {
+        return;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch(`/orders/remove-from-cart/${mealId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to show updated cart
+            location.reload();
+        } else {
+            alert('Error removing item: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to remove item. Please try again.');
+    });
+}
+
+function updateCartTotals(subtotal) {
+    const deliveryFee = 3.99;
+    const taxRate = 0.08;
+    
+    const subtotalWithDelivery = subtotal + deliveryFee;
+    const taxAmount = subtotalWithDelivery * taxRate;
+    const finalTotal = subtotalWithDelivery + taxAmount;
+    
+    // Update subtotal
+    const subtotalElement = document.querySelector('.d-flex.justify-content-between.mb-2:first-child span:last-child');
+    if (subtotalElement) {
+        subtotalElement.textContent = 'KES' + subtotal.toFixed(2);
+    }
+    
+    // Update tax amount
+    const taxElement = document.getElementById('tax-amount');
+    if (taxElement) {
+        taxElement.textContent = 'KES' + taxAmount.toFixed(2);
+    }
+    
+    // Update final total
+    const totalElement = document.getElementById('final-total');
+    if (totalElement) {
+        totalElement.textContent = 'KES' + finalTotal.toFixed(2);
     }
 }
 
@@ -165,24 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (subtotalElement) {
         const subtotalText = subtotalElement.textContent.replace('KES', '');
         const subtotal = parseFloat(subtotalText) || 0;
-        const deliveryFee = 3.99;
-        const taxRate = 0.08;
-        
-        const subtotalWithDelivery = subtotal + deliveryFee;
-        const taxAmount = subtotalWithDelivery * taxRate;
-        const finalTotal = subtotalWithDelivery + taxAmount;
-        
-        // Update tax amount
-        const taxElement = document.getElementById('tax-amount');
-        if (taxElement) {
-            taxElement.textContent = 'KES' + taxAmount.toFixed(2);
-        }
-        
-        // Update final total
-        const totalElement = document.getElementById('final-total');
-        if (totalElement) {
-            totalElement.textContent = 'KES' + finalTotal.toFixed(2);
-        }
+        updateCartTotals(subtotal);
     }
 });
 </script>
