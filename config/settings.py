@@ -88,9 +88,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mobilemealscenter',
+        'NAME': 'niebzdyl_mobilemealscenter',
         'USER': 'niebzdyl_admin',
-        'PASSWORD': '@Admin@20266',  # Set your MySQL password here
+        'PASSWORD': '@Admin@2026',  # Set your MySQL password here
         'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
