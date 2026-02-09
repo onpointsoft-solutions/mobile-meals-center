@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, UpdateView, DeleteView, TemplateView
+from django.views.generic import ListView, DetailView, UpdateView, DeleteView, TemplateView, View, CreateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Count, Sum, Q, Avg
@@ -13,7 +15,8 @@ from accounts.models import User
 from restaurants.models import Restaurant
 from meals.models import Meal, Category
 from orders.models import Order, OrderItem
-from .models import AdminActivityLog, SystemSettings
+from .models import AdminActivityLog, SystemSettings, Complaint
+from .forms import SuperAdminLoginForm
 
 
 class SuperAdminRequiredMixin(UserPassesTestMixin):
@@ -288,3 +291,124 @@ class ActivityLogView(SuperAdminRequiredMixin, ListView):
     
     def get_queryset(self):
         return AdminActivityLog.objects.select_related('admin').order_by('-created_at')
+
+
+class SuperAdminLoginView(LoginView):
+    template_name = 'superadmin/login.html'
+    form_class = SuperAdminLoginForm
+    redirect_authenticated_user = True
+    
+    def get_success_url(self):
+        return reverse_lazy('superadmin:dashboard')
+    
+    def form_valid(self, form):
+        user = form.get_user()
+        if not user.is_superuser:
+            messages.error(self.request, 'You do not have permission to access the admin panel.')
+            return redirect('core:home')
+        
+        # Log the login
+        AdminActivityLog.objects.create(
+            admin=user,
+            action='update',
+            target_model='User',
+            target_id=user.id,
+            description=f'Admin login: {user.username}',
+            ip_address=self.request.META.get('REMOTE_ADDR')
+        )
+        
+        return super().form_valid(form)
+
+
+class SuperAdminLogoutView(View):
+    def get(self, request):
+        if request.user.is_authenticated and request.user.is_superuser:
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='update',
+                target_model='User',
+                target_id=request.user.id,
+                description=f'Admin logout: {request.user.username}',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+        logout(request)
+        messages.success(request, 'You have been logged out successfully.')
+        return redirect('superadmin:login')
+
+
+class ComplaintManagementView(SuperAdminRequiredMixin, ListView):
+    model = Complaint
+    template_name = 'superadmin/complaints.html'
+    context_object_name = 'complaints'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Complaint.objects.select_related('user', 'resolved_by')
+        
+        # Search
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(subject__icontains=search) |
+                Q(description__icontains=search) |
+                Q(user__username__icontains=search) |
+                Q(order_number__icontains=search)
+            )
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # Filter by category
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+        
+        # Filter by priority
+        priority = self.request.GET.get('priority')
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        return queryset.order_by('-created_at')
+
+
+class ComplaintDetailView(SuperAdminRequiredMixin, DetailView):
+    model = Complaint
+    template_name = 'superadmin/complaint_detail.html'
+    context_object_name = 'complaint'
+
+
+class UpdateComplaintStatusView(SuperAdminRequiredMixin, View):
+    def post(self, request, pk):
+        complaint = get_object_or_404(Complaint, pk=pk)
+        new_status = request.POST.get('status')
+        admin_notes = request.POST.get('admin_notes', '')
+        
+        if new_status in dict(Complaint.STATUS_CHOICES):
+            old_status = complaint.status
+            complaint.status = new_status
+            
+            if admin_notes:
+                complaint.admin_notes = admin_notes
+            
+            if new_status == 'resolved':
+                complaint.mark_resolved(request.user)
+            else:
+                complaint.save()
+            
+            # Log activity
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='update',
+                target_model='Complaint',
+                target_id=complaint.id,
+                description=f'Updated complaint status from {old_status} to {new_status}: {complaint.subject}',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
+            messages.success(request, f'Complaint status updated to {complaint.get_status_display()}.')
+        else:
+            messages.error(request, 'Invalid status.')
+        
+        return redirect('superadmin:complaint_detail', pk=pk)

@@ -1,8 +1,13 @@
-from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, CreateView, ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.urls import reverse_lazy
 from django.db.models import Q
 from meals.models import Meal, Category
 from restaurants.models import Restaurant
+from superadmin.models import Complaint
+from .forms import ComplaintForm
 from django.core.paginator import Paginator
 
 
@@ -67,3 +72,25 @@ class PrivacyPolicyView(TemplateView):
 
 class TermsOfServiceView(TemplateView):
     template_name = 'core/terms_of_service.html'
+
+
+class SubmitComplaintView(LoginRequiredMixin, CreateView):
+    model = Complaint
+    form_class = ComplaintForm
+    template_name = 'core/submit_complaint.html'
+    success_url = reverse_lazy('core:my_complaints')
+    
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success(self.request, 'Your complaint has been submitted successfully. We will review it shortly.')
+        return super().form_valid(form)
+
+
+class MyComplaintsView(LoginRequiredMixin, ListView):
+    model = Complaint
+    template_name = 'core/my_complaints.html'
+    context_object_name = 'complaints'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Complaint.objects.filter(user=self.request.user).order_by('-created_at')

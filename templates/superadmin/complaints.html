@@ -1,0 +1,158 @@
+{% extends 'superadmin/base_admin.html' %}
+
+{% block title %}Complaint Management{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>Complaint Management</h2>
+    <p class="text-muted mb-0">Monitor and resolve user complaints</p>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="Search complaints..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_review" {% if request.GET.status == 'in_review' %}selected{% endif %}>In Review</option>
+                    <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    <option value="order" {% if request.GET.category == 'order' %}selected{% endif %}>Order Issue</option>
+                    <option value="restaurant" {% if request.GET.category == 'restaurant' %}selected{% endif %}>Restaurant Issue</option>
+                    <option value="payment" {% if request.GET.category == 'payment' %}selected{% endif %}>Payment Issue</option>
+                    <option value="delivery" {% if request.GET.category == 'delivery' %}selected{% endif %}>Delivery Issue</option>
+                    <option value="quality" {% if request.GET.category == 'quality' %}selected{% endif %}>Food Quality</option>
+                    <option value="service" {% if request.GET.category == 'service' %}selected{% endif %}>Customer Service</option>
+                    <option value="technical" {% if request.GET.category == 'technical' %}selected{% endif %}>Technical Issue</option>
+                    <option value="other" {% if request.GET.category == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="priority" class="form-select">
+                    <option value="">All Priorities</option>
+                    <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'superadmin:complaints' %}" class="btn btn-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Complaints Table -->
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Category</th>
+                    <th>Subject</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td>
+                        {{ complaint.user.username }}<br>
+                        <small class="text-muted">{{ complaint.user.email }}</small>
+                    </td>
+                    <td><span class="badge bg-secondary">{{ complaint.get_category_display }}</span></td>
+                    <td>
+                        <strong>{{ complaint.subject }}</strong><br>
+                        <small class="text-muted">{{ complaint.description|truncatewords:10 }}</small>
+                        {% if complaint.order_number %}
+                            <br><small class="badge bg-info">Order: {{ complaint.order_number }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if complaint.priority == 'high' %}bg-danger
+                            {% elif complaint.priority == 'medium' %}bg-warning
+                            {% else %}bg-secondary{% endif %}">
+                            {{ complaint.get_priority_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge 
+                            {% if complaint.status == 'pending' %}bg-warning
+                            {% elif complaint.status == 'in_review' %}bg-info
+                            {% elif complaint.status == 'resolved' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                            {{ complaint.get_status_display }}
+                        </span>
+                    </td>
+                    <td><small>{{ complaint.created_at|date:"M d, Y H:i" }}</small></td>
+                    <td>
+                        <a href="{% url 'superadmin:complaint_detail' complaint.pk %}" 
+                           class="btn btn-sm btn-outline-primary" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No complaints found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="p-3 border-top">
+        <nav>
+            <ul class="pagination mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority }}{% endif %}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

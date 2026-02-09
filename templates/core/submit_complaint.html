@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit Complaint - Mobile Meals Center{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white py-4">
+                    <h2 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>Submit a Complaint</h2>
+                    <p class="mb-0">We're here to help. Let us know about your issue.</p>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Before submitting:</strong> Please provide as much detail as possible to help us resolve your issue quickly.
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-tag me-2"></i>Issue Category *
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.subject.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-pencil me-2"></i>Subject *
+                            </label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-file-text me-2"></i>Description *
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">Please provide detailed information about your complaint.</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.order_number.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-receipt me-2"></i>Order Number (Optional)
+                            </label>
+                            {{ form.order_number }}
+                            {% if form.order_number.errors %}
+                                <div class="text-danger small mt-1">{{ form.order_number.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">If your complaint is related to a specific order, please provide the order number.</small>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors.0 }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="d-flex gap-3">
+                            <a href="{% url 'core:my_complaints' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                                <i class="bi bi-send me-2"></i>Submit Complaint
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="bi bi-question-circle me-2"></i>What happens next?</h5>
+                    <ul class="mb-0">
+                        <li>Your complaint will be reviewed by our team</li>
+                        <li>We'll investigate the issue thoroughly</li>
+                        <li>You'll receive updates on the status of your complaint</li>
+                        <li>We aim to resolve all complaints within 48 hours</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'superadmin/base_admin.html' %}
+
+{% block title %}Complaint Details{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-chat-left-text me-2"></i>Complaint Details</h2>
+            <p class="text-muted mb-0">Review and manage complaint</p>
+        </div>
+        <a href="{% url 'superadmin:complaints' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Complaint Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong>
+                    <p>{{ complaint.subject }}</p>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Description:</strong>
+                    <p>{{ complaint.description }}</p>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Category:</strong>
+                        <p><span class="badge bg-secondary">{{ complaint.get_category_display }}</span></p>
+                    </div>
+                    {% if complaint.order_number %}
+                    <div class="col-md-6">
+                        <strong>Related Order:</strong>
+                        <p><span class="badge bg-info">{{ complaint.order_number }}</span></p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        <p>
+                            <span class="badge 
+                                {% if complaint.status == 'pending' %}bg-warning
+                                {% elif complaint.status == 'in_review' %}bg-info
+                                {% elif complaint.status == 'resolved' %}bg-success
+                                {% else %}bg-secondary{% endif %}">
+                                {{ complaint.get_status_display }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Priority:</strong>
+                        <p>
+                            <span class="badge 
+                                {% if complaint.priority == 'high' %}bg-danger
+                                {% elif complaint.priority == 'medium' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">
+                                {{ complaint.get_priority_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Submitted:</strong>
+                    <p>{{ complaint.created_at|date:"F d, Y H:i" }}</p>
+                </div>
+                
+                {% if complaint.resolved_at %}
+                <div class="mb-3">
+                    <strong>Resolved:</strong>
+                    <p>{{ complaint.resolved_at|date:"F d, Y H:i" }} by {{ complaint.resolved_by.username }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if complaint.admin_notes %}
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-sticky me-2"></i>Admin Notes</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ complaint.admin_notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Username:</strong> {{ complaint.user.username }}</p>
+                <p><strong>Email:</strong> {{ complaint.user.email }}</p>
+                <p><strong>User Type:</strong> 
+                    {% if complaint.user.is_restaurant %}
+                        <span class="badge bg-success">Restaurant</span>
+                    {% else %}
+                        <span class="badge bg-primary">Customer</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Update Status</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'superadmin:update_complaint_status' complaint.pk %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="pending" {% if complaint.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="in_review" {% if complaint.status == 'in_review' %}selected{% endif %}>In Review</option>
+                            <option value="resolved" {% if complaint.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                            <option value="closed" {% if complaint.status == 'closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="admin_notes" class="form-label">Admin Notes</label>
+                        <textarea name="admin_notes" id="admin_notes" class="form-control" rows="4" 
+                                  placeholder="Add notes about the resolution...">{{ complaint.admin_notes }}</textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle me-2"></i>Update Status
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

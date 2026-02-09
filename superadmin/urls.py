@@ -4,6 +4,10 @@ from . import views
 app_name = 'superadmin'
 
 urlpatterns = [
+    # Authentication
+    path('login/', views.SuperAdminLoginView.as_view(), name='login'),
+    path('logout/', views.SuperAdminLogoutView.as_view(), name='logout'),
+    
     # Dashboard
     path('', views.AdminDashboardView.as_view(), name='dashboard'),
     
@@ -18,6 +22,11 @@ urlpatterns = [
     
     # Order Management
     path('orders/', views.OrderManagementView.as_view(), name='orders'),
+    
+    # Complaint Management
+    path('complaints/', views.ComplaintManagementView.as_view(), name='complaints'),
+    path('complaints/<int:pk>/', views.ComplaintDetailView.as_view(), name='complaint_detail'),
+    path('complaints/<int:pk>/update-status/', views.UpdateComplaintStatusView.as_view(), name='update_complaint_status'),
     
     # Category Management
     path('categories/', views.CategoryManagementView.as_view(), name='categories'),
