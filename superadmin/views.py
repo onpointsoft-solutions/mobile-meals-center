@@ -42,7 +42,7 @@ class AdminDashboardView(SuperAdminRequiredMixin, TemplateView):
         
         # Overall statistics
         context['total_users'] = User.objects.count()
-        context['total_customers'] = User.objects.filter(is_customer=True).count()
+        context['total_customers'] = User.objects.filter(user_type='customer').count()
         context['total_restaurants'] = Restaurant.objects.count()
         context['active_restaurants'] = Restaurant.objects.filter(is_active=True).count()
         context['total_meals'] = Meal.objects.count()
