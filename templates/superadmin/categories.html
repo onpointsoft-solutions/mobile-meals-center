@@ -1,0 +1,45 @@
+{% extends 'superadmin/base_admin.html' %}
+
+{% block title %}Category Management{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2 class="mb-0"><i class="bi bi-tags me-2"></i>Category Management</h2>
+    <p class="text-muted mb-0">Manage meal categories</p>
+</div>
+
+<!-- Categories Table -->
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                    <th class="text-center">Meal Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td><strong>{{ category.name }}</strong></td>
+                    <td>{{ category.description|default:"No description" }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">{{ category.meal_count }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">No categories found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="alert alert-info mt-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>Note:</strong> Categories can be managed through the Django admin panel at <a href="/admin/meals/category/" target="_blank">/admin/meals/category/</a>
+</div>
+{% endblock %}

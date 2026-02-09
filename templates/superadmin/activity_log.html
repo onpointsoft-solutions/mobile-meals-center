@@ -1,0 +1,87 @@
+{% extends 'superadmin/base_admin.html' %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h2 class="mb-0"><i class="bi bi-clock-history me-2"></i>Activity Log</h2>
+    <p class="text-muted mb-0">Track all admin actions</p>
+</div>
+
+<!-- Activity Log Table -->
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Admin</th>
+                    <th>Action</th>
+                    <th>Target</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.admin.username }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if log.action == 'create' %}bg-success
+                            {% elif log.action == 'update' %}bg-info
+                            {% elif log.action == 'delete' %}bg-danger
+                            {% elif log.action == 'approve' %}bg-success
+                            {% elif log.action == 'reject' %}bg-danger
+                            {% elif log.action == 'suspend' %}bg-warning
+                            {% elif log.action == 'activate' %}bg-success
+                            {% else %}bg-secondary{% endif %}">
+                            {{ log.get_action_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <small class="text-muted">{{ log.target_model }} #{{ log.target_id }}</small>
+                    </td>
+                    <td>{{ log.description }}</td>
+                    <td><small>{{ log.created_at|date:"M d, Y H:i:s" }}</small></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No activity logs yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="p-3 border-top">
+        <nav>
+            <ul class="pagination mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

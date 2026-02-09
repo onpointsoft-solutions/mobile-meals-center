@@ -1,0 +1,146 @@
+{% extends 'superadmin/base_admin.html' %}
+
+{% block title %}Restaurant Management{% endblock %}
+
+{% block content %}
+<div class="admin-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-shop me-2"></i>Restaurant Management</h2>
+        <p class="text-muted mb-0">Manage all restaurants on the platform</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search restaurants..." 
+                       value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'superadmin:restaurants' %}" class="btn btn-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Restaurants Table -->
+<div class="data-table">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Restaurant</th>
+                    <th>Owner</th>
+                    <th>Meals</th>
+                    <th>Orders</th>
+                    <th>Revenue</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for restaurant in restaurants %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if restaurant.logo %}
+                            <img src="{{ restaurant.logo.url }}" class="rounded me-2" 
+                                 style="width: 40px; height: 40px; object-fit: cover;" alt="{{ restaurant.name }}">
+                            {% else %}
+                            <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="bi bi-shop text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ restaurant.name }}</strong><br>
+                                <small class="text-muted">{{ restaurant.phone }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {{ restaurant.owner.username }}<br>
+                        <small class="text-muted">{{ restaurant.owner.email }}</small>
+                    </td>
+                    <td><span class="badge bg-info">{{ restaurant.meal_count }}</span></td>
+                    <td><span class="badge bg-primary">{{ restaurant.order_count }}</span></td>
+                    <td>KES {{ restaurant.total_revenue|default:"0.00"|floatformat:2 }}</td>
+                    <td>
+                        {% if restaurant.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'superadmin:restaurant_detail' restaurant.pk %}" 
+                           class="btn btn-sm btn-outline-primary" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <form method="post" action="{% url 'superadmin:toggle_restaurant_status' restaurant.pk %}" 
+                              class="d-inline" onsubmit="return confirm('Are you sure?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-{% if restaurant.is_active %}danger{% else %}success{% endif %}" 
+                                    title="{% if restaurant.is_active %}Suspend{% else %}Activate{% endif %}">
+                                <i class="bi bi-{% if restaurant.is_active %}x-circle{% else %}check-circle{% endif %}"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No restaurants found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="p-3 border-top">
+        <nav>
+            <ul class="pagination mb-0 justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
