@@ -71,7 +71,7 @@ class AdminDashboardView(SuperAdminRequiredMixin, TemplateView):
         
         # Top restaurants by orders
         context['top_restaurants'] = Restaurant.objects.annotate(
-            order_count=Count('order')
+            order_count=Count('orders')
         ).order_by('-order_count')[:5]
         
         # Top meals by orders
@@ -101,10 +101,10 @@ class RestaurantManagementView(SuperAdminRequiredMixin, ListView):
     
     def get_queryset(self):
         queryset = Restaurant.objects.select_related('owner').annotate(
-            meal_count=Count('meal'),
-            order_count=Count('order'),
-            total_revenue=Sum('order__total_amount', filter=Q(
-                order__status__in=['confirmed', 'preparing', 'ready', 'delivered']
+            meal_count=Count('meals'),
+            order_count=Count('orders'),
+            total_revenue=Sum('orders__total_amount', filter=Q(
+                orders__status__in=['confirmed', 'preparing', 'ready', 'delivered']
             ))
         )
         
