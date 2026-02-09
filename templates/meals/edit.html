@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Edit Meal - Mobile Meals Center{% endblock %}
+
+{% block extra_css %}
+<style>
+.create-meal-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.meal-form-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.form-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.form-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.form-body {
+    padding: 2rem;
+}
+
+.form-floating {
+    margin-bottom: 1.5rem;
+}
+
+.form-floating .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 1rem 0.75rem;
+    height: auto;
+    transition: all 0.3s ease;
+}
+
+.form-floating .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+}
+
+.form-floating label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.form-floating textarea.form-control {
+    min-height: 120px;
+}
+
+.image-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 2rem;
+    text-align: center;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.image-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 53, 0.05);
+}
+
+.image-upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(255, 107, 53, 0.1);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.image-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 10px;
+    margin-top: 1rem;
+}
+
+.current-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.availability-toggle {
+    background: #e9ecef;
+    border-radius: 25px;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.availability-toggle input[type="checkbox"] {
+    width: 50px;
+    height: 25px;
+    appearance: none;
+    background: #ccc;
+    border-radius: 25px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.availability-toggle input[type="checkbox"]:checked {
+    background: var(--primary-color);
+}
+
+.availability-toggle input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+}
+
+.availability-toggle input[type="checkbox"]:checked::before {
+    transform: translateX(25px);
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    border-radius: 10px;
+    padding: 1rem 2rem;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    border: none;
+    border-radius: 10px;
+    padding: 1rem 2rem;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.form-tips {
+    background: rgba(255, 107, 53, 0.05);
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-meal-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="meal-form-card">
+                    <!-- Header -->
+                    <div class="form-header">
+                        <h1><i class="bi bi-pencil me-2"></i>Edit Meal</h1>
+                        <p class="mb-0">Update your meal details</p>
+                    </div>
+                    
+                    <!-- Form Body -->
+                    <div class="form-body">
+                        <!-- Form -->
+                        <form method="post" enctype="multipart/form-data" id="mealForm">
+                            {% csrf_token %}
+                            
+                            <!-- Current Image -->
+                            {% if form.instance.image %}
+                            <div class="mb-3 text-center">
+                                <label class="form-label fw-bold">Current Image</label>
+                                <div>
+                                    <img src="{{ form.instance.image.url }}" class="current-image" alt="{{ form.instance.name }}">
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Meal Name -->
+                            <div class="form-floating">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="{{ form.name.id_for_label }}" 
+                                       name="{{ form.name.name }}"
+                                       placeholder="Meal Name"
+                                       value="{{ form.name.value|default:'' }}"
+                                       required>
+                                <label for="{{ form.name.id_for_label }}">Meal Name</label>
+                                {% if form.name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ form.name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="form-floating">
+                                <textarea class="form-control" 
+                                          id="{{ form.description.id_for_label }}" 
+                                          name="{{ form.description.name }}"
+                                          placeholder="Description"
+                                          required>{{ form.description.value|default:'' }}</textarea>
+                                <label for="{{ form.description.id_for_label }}">Description</label>
+                                {% if form.description.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Category and Price -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-control" 
+                                                id="{{ form.category.id_for_label }}" 
+                                                name="{{ form.category.name }}">
+                                            <option value="">Select Category</option>
+                                            {% for category in form.category.field.queryset %}
+                                                <option value="{{ category.pk }}" 
+                                                        {% if form.category.value == category.pk or form.instance.category.pk == category.pk %}selected{% endif %}>
+                                                    {{ category.name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="{{ form.category.id_for_label }}">Category</label>
+                                        {% if form.category.errors %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-circle me-1"></i>{{ form.category.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <span class="input-group-text">KES</span>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="{{ form.price.id_for_label }}" 
+                                               name="{{ form.price.name }}"
+                                               placeholder="Price"
+                                               step="0.01"
+                                               min="0"
+                                               value="{{ form.price.value|default:'' }}"
+                                               required>
+                                    </div>
+                                    <label for="{{ form.price.id_for_label }}" class="small text-muted mt-1">Price in KES</label>
+                                    {% if form.price.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-circle me-1"></i>{{ form.price.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Image Upload -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Update Meal Image (Optional)</label>
+                                <div class="image-upload-area" onclick="document.getElementById('{{ form.image.id_for_label }}').click()">
+                                    <div class="upload-icon">
+                                        <i class="bi bi-cloud-upload"></i>
+                                    </div>
+                                    <h6>Click to upload new image or drag and drop</h6>
+                                    <small class="text-muted">Leave empty to keep current image</small>
+                                    <input type="file" 
+                                           id="{{ form.image.id_for_label }}" 
+                                           name="{{ form.image.name }}"
+                                           accept="image/*"
+                                           style="display: none;">
+                                    <div id="imagePreview"></div>
+                                </div>
+                                {% if form.image.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>{{ form.image.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Preparation Time and Availability -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="{{ form.preparation_time.id_for_label }}" 
+                                               name="{{ form.preparation_time.name }}"
+                                               placeholder="Preparation Time"
+                                               min="1"
+                                               value="{{ form.preparation_time.value|default:'30' }}"
+                                               required>
+                                        <label for="{{ form.preparation_time.id_for_label }}">Preparation Time (minutes)</label>
+                                        {% if form.preparation_time.errors %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-circle me-1"></i>{{ form.preparation_time.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="availability-toggle">
+                                        <span class="fw-bold">Available:</span>
+                                        <input type="checkbox" 
+                                               id="{{ form.is_available.id_for_label }}" 
+                                               name="{{ form.is_available.name }}"
+                                               {% if form.is_available.value or form.instance.is_available %}checked{% endif %}>
+                                        <label for="{{ form.is_available.id_for_label }}" class="mb-0">
+                                            <span id="availabilityText">{% if form.is_available.value or form.instance.is_available %}Yes{% else %}No{% endif %}</span>
+                                        </label>
+                                    </div>
+                                    {% if form.is_available.errors %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-circle me-1"></i>{{ form.is_available.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Error Messages -->
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger d-flex align-items-center mb-4">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <div>{{ form.non_field_errors.0 }}</div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Buttons -->
+                            <div class="d-flex gap-3 justify-content-end">
+                                <a href="{% url 'restaurants:dashboard' %}" class="cancel-btn">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn submit-btn text-white">
+                                    <i class="bi bi-check-circle me-2"></i>Update Meal
+                                    <div class="spinner-border spinner-border-sm ms-2 d-none" id="submitSpinner"></div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image upload preview
+document.getElementById('{{ form.image.id_for_label }}').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" class="image-preview" alt="Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Drag and drop functionality
+const uploadArea = document.querySelector('.image-upload-area');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('{{ form.image.id_for_label }}').files = files;
+        document.getElementById('{{ form.image.id_for_label }}').dispatchEvent(new Event('change'));
+    }
+});
+
+// Availability toggle
+document.getElementById('{{ form.is_available.id_for_label }}').addEventListener('change', function() {
+    const text = document.getElementById('availabilityText');
+    text.textContent = this.checked ? 'Yes' : 'No';
+});
+
+// Form submission with loading state
+document.getElementById('mealForm').addEventListener('submit', function() {
+    const spinner = document.getElementById('submitSpinner');
+    const button = this.querySelector('button[type="submit"]');
+    
+    spinner.classList.remove('d-none');
+    button.disabled = true;
+});
+
+// Auto-focus first input
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('{{ form.name.id_for_label }}').focus();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Meal - Mobile Meals Center{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white text-center py-4">
+                    <i class="bi bi-exclamation-triangle display-4"></i>
+                    <h2 class="mt-3 mb-0">Delete Meal</h2>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        {% if meal.image %}
+                        <img src="{{ meal.image.url }}" class="rounded" style="max-width: 200px; max-height: 200px; object-fit: cover;" alt="{{ meal.name }}">
+                        {% else %}
+                        <div class="bg-light rounded d-inline-flex align-items-center justify-content-center" style="width: 200px; height: 200px;">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="bi bi-exclamation-circle me-2"></i>Are you sure?
+                        </h5>
+                        <p class="mb-0">
+                            You are about to permanently delete <strong>{{ meal.name }}</strong>. 
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="text-muted">Meal Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Name:</strong> {{ meal.name }}</li>
+                            <li><strong>Price:</strong> KES{{ meal.price }}</li>
+                            <li><strong>Category:</strong> {{ meal.category.name|default:"Uncategorized" }}</li>
+                            <li><strong>Status:</strong> 
+                                <span class="badge {% if meal.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if meal.is_available %}Available{% else %}Unavailable{% endif %}
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a href="{% url 'restaurants:dashboard' %}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="bi bi-trash me-2"></i>Yes, Delete Meal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
