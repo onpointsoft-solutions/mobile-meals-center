@@ -136,10 +136,10 @@ class RestaurantDetailAdminView(SuperAdminRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         restaurant = self.object
         
-        context['meals'] = restaurant.meal_set.all()
-        context['orders'] = restaurant.order_set.select_related('customer').order_by('-created_at')[:20]
-        context['total_orders'] = restaurant.order_set.count()
-        context['total_revenue'] = restaurant.order_set.filter(
+        context['meals'] = restaurant.meals.all()
+        context['orders'] = restaurant.orders.select_related('customer').order_by('-created_at')[:20]
+        context['total_orders'] = restaurant.orders.count()
+        context['total_revenue'] = restaurant.orders.filter(
             status__in=['confirmed', 'preparing', 'ready', 'delivered']
         ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
         
