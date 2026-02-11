@@ -174,10 +174,11 @@ ADMINS = [('Admin', 'admin@mobilemealscenter.co.ke')]
 MANAGERS = ADMINS
 
 # Stripe Configuration
-# Test keys - replace with live keys in production
-STRIPE_PUBLISHABLE_KEY = 'pk_test_51234567890abcdef'  # Replace with your publishable key
-STRIPE_SECRET_KEY = 'sk_test_51234567890abcdef'  # Replace with your secret key
-STRIPE_WEBHOOK_SECRET = 'whsec_1234567890abcdef'  # Replace with your webhook secret
+# Keys should be set as environment variables for security
+# Set these in your server environment or .env file (not committed to git)
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', 'pk_test_your_key_here')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_your_key_here')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', 'whsec_your_webhook_secret')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
