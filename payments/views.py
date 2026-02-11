@@ -8,7 +8,6 @@ from django.contrib import messages
 from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
-import stripe
 import json
 import logging
 
@@ -16,19 +15,17 @@ from .models import Payment
 from orders.models import Order
 from core.email_utils import send_order_confirmation_email, send_restaurant_notification_email
 
-# Configure Stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
 
 
 class CreatePaymentIntentView(LoginRequiredMixin, View):
-    """Create a Stripe Payment Intent for the order"""
+    """Confirm order without payment processing (payment integration disabled)"""
     
     def post(self, request):
         try:
             data = json.loads(request.body)
             order_id = data.get('order_id')
-            payment_method_type = data.get('payment_method_type', 'card')
+            payment_method_type = data.get('payment_method_type', 'cash_on_delivery')
             
             order = get_object_or_404(Order, id=order_id, customer=request.user)
             
@@ -44,70 +41,36 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
                 defaults={
                     'user': request.user,
                     'amount': total_amount,
-                    'status': 'pending',
-                    'payment_method': payment_method_type
+                    'status': 'completed',
+                    'payment_method': 'cash_on_delivery'
                 }
             )
             
-            # Handle cash on delivery - requires 60% deposit
-            if payment_method_type == 'cash_on_delivery':
-                # Calculate 60% deposit for cash on delivery
-                deposit_percentage = Decimal('0.60')
-                deposit_amount = total_amount * deposit_percentage
-                
-                # Create Stripe Payment Intent for 60% deposit
-                intent = stripe.PaymentIntent.create(
-                    amount=int(deposit_amount * 100),  # Amount in cents
-                    currency='kes',
-                    payment_method_types=['card', 'mpesa'],
-                    metadata={
-                        'order_id': str(order.id),
-                        'payment_id': str(payment.id),
-                        'customer_id': str(request.user.id),
-                        'payment_type': 'cash_on_delivery_deposit',
-                        'deposit_percentage': '60',
-                        'remaining_amount': str(total_amount - deposit_amount)
-                    }
-                )
-                
-                # Update payment with deposit info
-                payment.status = 'pending'
-                payment.payment_method = 'cash_on_delivery'
-                payment.amount = total_amount
-                payment.stripe_payment_intent_id = intent.id
-                payment.save()
-                
-                return JsonResponse({
-                    'client_secret': intent.client_secret,
-                    'payment_id': str(payment.id),
-                    'deposit_amount': float(deposit_amount),
-                    'remaining_amount': float(total_amount - deposit_amount),
-                    'message': 'Pay 60% deposit now, remaining 40% on delivery'
-                })
-            
-            # For card and M-Pesa payments, create Stripe Payment Intent
-            intent = stripe.PaymentIntent.create(
-                amount=int(total_amount * 100),  # Amount in cents
-                currency='kes',  # Kenya Shillings
-                payment_method_types=['card', 'mpesa'],  # Enable both card and M-Pesa
-                metadata={
-                    'order_id': str(order.id),
-                    'payment_id': str(payment.id),
-                    'customer_id': str(request.user.id),
-                }
-            )
-            
-            # Update payment with Stripe intent ID
-            payment.stripe_payment_intent_id = intent.id
+            # Update payment status to completed
+            payment.status = 'completed'
+            payment.payment_method = 'cash_on_delivery'
+            payment.amount = total_amount
             payment.save()
             
+            # Update order status to confirmed
+            order.status = 'confirmed'
+            order.save()
+            
+            # Send confirmation emails
+            try:
+                send_order_confirmation_email(order)
+                send_restaurant_notification_email(order)
+            except Exception as email_error:
+                logger.error(f"Error sending emails: {str(email_error)}")
+            
             return JsonResponse({
-                'client_secret': intent.client_secret,
-                'payment_id': str(payment.id)
+                'success': True,
+                'payment_id': str(payment.id),
+                'message': 'Order confirmed! Pay cash on delivery.'
             })
             
         except Exception as e:
-            logger.error(f"Error creating payment intent: {str(e)}")
+            logger.error(f"Error confirming order: {str(e)}")
             return JsonResponse({'error': str(e)}, status=400)
 
 
@@ -133,8 +96,7 @@ class ProcessPaymentView(LoginRequiredMixin, TemplateView):
             'subtotal': subtotal,
             'delivery_fee': delivery_fee,
             'tax_amount': tax_amount,
-            'total_amount': total_amount,
-            'stripe_publishable_key': settings.STRIPE_PUBLISHABLE_KEY
+            'total_amount': total_amount
         })
         return context
 

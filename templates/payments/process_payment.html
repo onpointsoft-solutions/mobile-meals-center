@@ -88,7 +88,7 @@
                                                 <i class="bi bi-cash-coin fs-3 text-success me-3"></i>
                                                 <div class="flex-grow-1">
                                                     <strong class="fs-5">Pay on Delivery</strong>
-                                                    <div class="text-muted">Cash payment when your order arrives</div>
+                                                    <div class="text-muted">Pay cash when your order arrives</div>
                                                     <span class="badge bg-success mt-2">Available Now</span>
                                                 </div>
                                                 <i class="bi bi-check-circle-fill fs-4 text-success"></i>
@@ -226,13 +226,6 @@
                                 <!-- Payment Button -->
                                 <button id="submit-mpesa-payment" class="btn btn-success btn-lg w-100">
                                     <span id="mpesa-button-text">
-                                        <i class="bi bi-phone me-2"></i>Pay KES{{ total_amount|floatformat:2 }} with M-Pesa
-                                    </span>
-                                    <div id="mpesa-spinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </button>
-                            </form>
                         </div>
                     </div>
                     
@@ -244,30 +237,21 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                <strong>Cash on Delivery Information:</strong>
-                                <ul class="mb-0 mt-2">
-                                    <li>Payment will be collected upon delivery</li>
-                                    <li>Please have exact change ready</li>
-                                    <li>Our delivery person will provide a receipt</li>
-                                    <li>Orders are confirmed immediately</li>
-                                </ul>
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <strong>Cash on Delivery</strong>
+                                <p class="mb-0 mt-2">Your order will be confirmed immediately. Pay the full amount in cash when your order is delivered.</p>
                             </div>
                             
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <div class="bg-light p-3 rounded">
-                                        <h6 class="mb-2"><i class="bi bi-clock me-2"></i>Delivery Time</h6>
-                                        <p class="mb-0 text-muted">30-45 minutes</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="bg-light p-3 rounded">
-                                        <h6 class="mb-2"><i class="bi bi-currency-dollar me-2"></i>Total Amount</h6>
-                                        <p class="mb-0 fw-bold text-primary">KES{{ total_amount|floatformat:2 }}</p>
-                                    </div>
-                                </div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Order Details:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Total Amount: <strong>KES{{ total_amount|floatformat:2 }}</strong></li>
+                                    <li>Payment Method: Cash on Delivery</li>
+                                    <li>Estimated Delivery: 30-45 minutes</li>
+                                    <li>Please have exact change ready</li>
+                                </ul>
                             </div>
                             
                             <!-- Confirm Order Button -->
@@ -354,195 +338,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://js.stripe.com/v3/"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Stripe
-    const stripe = Stripe('{{ stripe_publishable_key }}');
-    const elements = stripe.elements();
-    
-    // Create card element
-    const cardElement = elements.create('card', {
-        style: {
-            base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                    color: '#aab7c4',
-                },
-            },
-        },
-    });
-    
-    cardElement.mount('#card-element');
-    
-    // Handle real-time validation errors from the card Element
-    cardElement.on('change', function(event) {
-        const displayError = document.getElementById('card-errors');
-        if (event.error) {
-            displayError.textContent = event.error.message;
-        } else {
-            displayError.textContent = '';
-        }
-    });
-    
-    // Payment method switching
-    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
-    const cardPaymentForm = document.getElementById('cardPaymentForm');
-    const mpesaPaymentForm = document.getElementById('mpesaPaymentForm');
-    const cashPaymentForm = document.getElementById('cashPaymentForm');
-    
-    paymentMethodRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Hide all forms first
-            cardPaymentForm.style.display = 'none';
-            mpesaPaymentForm.style.display = 'none';
-            cashPaymentForm.style.display = 'none';
-            
-            // Show the selected form
-            if (this.value === 'card') {
-                cardPaymentForm.style.display = 'block';
-            } else if (this.value === 'mpesa') {
-                mpesaPaymentForm.style.display = 'block';
-            } else if (this.value === 'cash') {
-                cashPaymentForm.style.display = 'block';
-            }
-        });
-    });
-    
-    // Handle form submission
-    const form = document.getElementById('payment-form');
-    const submitButton = document.getElementById('submit-payment');
-    const buttonText = document.getElementById('button-text');
-    const spinner = document.getElementById('spinner');
-    
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        
-        // Disable submit button and show loading
-        submitButton.disabled = true;
-        buttonText.style.display = 'none';
-        spinner.style.display = 'inline-block';
-        
-        try {
-            // Create payment intent
-            const response = await fetch('{% url "payments:create_payment_intent" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                },
-                body: JSON.stringify({
-                    order_id: '{{ order.id }}'
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            // Confirm payment with Stripe
-            const result = await stripe.confirmCardPayment(data.client_secret, {
-                payment_method: {
-                    card: cardElement,
-                    billing_details: {
-                        name: document.getElementById('billing-name').value,
-                        email: document.getElementById('billing-email').value,
-                        address: {
-                            line1: document.getElementById('billing-address').value,
-                        }
-                    }
-                }
-            });
-            
-            if (result.error) {
-                // Show error to customer
-                const errorElement = document.getElementById('card-errors');
-                errorElement.textContent = result.error.message;
-                
-                // Re-enable submit button
-                submitButton.disabled = false;
-                buttonText.style.display = 'inline';
-                spinner.style.display = 'none';
-            } else {
-                // Payment succeeded, redirect to success page
-                window.location.href = '/payments/payment-success/' + data.payment_id + '/';
-            }
-            
-        } catch (error) {
-            console.error('Payment error:', error);
-            const errorElement = document.getElementById('card-errors');
-            errorElement.textContent = 'An unexpected error occurred. Please try again.';
-            
-            // Re-enable submit button
-            submitButton.disabled = false;
-            buttonText.style.display = 'inline';
-            spinner.style.display = 'none';
-        }
-    });
-    
-    // Handle M-Pesa payment submission
-    const mpesaForm = document.getElementById('mpesa-form');
-    const mpesaSubmitButton = document.getElementById('submit-mpesa-payment');
-    
-    mpesaForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        
-        const mpesaButtonText = document.getElementById('mpesa-button-text');
-        const mpesaSpinner = document.getElementById('mpesa-spinner');
-        const phoneNumber = document.getElementById('mpesa-phone').value;
-        
-        // Validate phone number
-        if (!phoneNumber || phoneNumber.length !== 9) {
-            alert('Please enter a valid M-Pesa phone number (9 digits)');
-            return;
-        }
-        
-        // Disable submit button and show loading
-        mpesaSubmitButton.disabled = true;
-        mpesaButtonText.textContent = 'Processing M-Pesa Payment...';
-        mpesaSpinner.style.display = 'inline-block';
-        
-        try {
-            // Create payment intent for M-Pesa
-            const response = await fetch('{% url "payments:create_payment_intent" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    order_id: '{{ order.id }}',
-                    payment_method_type: 'mpesa',
-                    phone_number: '+254' + phoneNumber
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            // For M-Pesa, the payment is initiated on the server
-            // Show success message and redirect
-            alert('M-Pesa payment initiated! Please check your phone for the STK push notification and enter your PIN.');
-            
-            // Redirect to a waiting page or success page
-            window.location.href = '/payments/payment-success/' + data.payment_id + '/';
-            
-        } catch (error) {
-            console.error('M-Pesa payment error:', error);
-            alert('M-Pesa payment failed: ' + error.message);
-            
-            // Re-enable submit button
-            mpesaSubmitButton.disabled = false;
-            mpesaButtonText.innerHTML = '<i class="bi bi-phone me-2"></i>Pay KES{{ total_amount|floatformat:2 }} with M-Pesa';
-            mpesaSpinner.style.display = 'none';
-        }
-    });
     
     // Handle Cash on Delivery submission
     const cashSubmitButton = document.getElementById('submit-cash-payment');
@@ -579,8 +376,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Order confirmed, redirect to success page
-            alert('Order confirmed! Your food will be delivered in 30-45 minutes. Please have exact change ready.');
-            window.location.href = '/payments/payment-success/' + data.payment_id + '/';
+            if (data.success) {
+                window.location.href = '/payments/payment-success/' + data.payment_id + '/';
+            }
             
         } catch (error) {
             console.error('Cash payment error:', error);

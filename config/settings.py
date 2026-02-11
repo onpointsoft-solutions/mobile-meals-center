@@ -173,12 +173,11 @@ DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemealscenter.com>'
 ADMINS = [('Admin', 'admin@mobilemealscenter.co.ke')]
 MANAGERS = ADMINS
 
-# Stripe Configuration
-# Keys should be set as environment variables for security
-# Set these in your server environment or .env file (not committed to git)
-STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+# Stripe Configuration - Disabled for now
+# Payment integration will be added later
+#STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+#STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+#STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
