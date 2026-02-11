@@ -49,28 +49,40 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
                 }
             )
             
-            # Handle cash on delivery
+            # Handle cash on delivery - requires 60% deposit
             if payment_method_type == 'cash_on_delivery':
-                # For cash on delivery, mark payment as pending and order as confirmed
-                payment.status = 'pending_cash'
+                # Calculate 60% deposit for cash on delivery
+                deposit_percentage = Decimal('0.60')
+                deposit_amount = total_amount * deposit_percentage
+                
+                # Create Stripe Payment Intent for 60% deposit
+                intent = stripe.PaymentIntent.create(
+                    amount=int(deposit_amount * 100),  # Amount in cents
+                    currency='kes',
+                    payment_method_types=['card', 'mpesa'],
+                    metadata={
+                        'order_id': str(order.id),
+                        'payment_id': str(payment.id),
+                        'customer_id': str(request.user.id),
+                        'payment_type': 'cash_on_delivery_deposit',
+                        'deposit_percentage': '60',
+                        'remaining_amount': str(total_amount - deposit_amount)
+                    }
+                )
+                
+                # Update payment with deposit info
+                payment.status = 'pending'
                 payment.payment_method = 'cash_on_delivery'
+                payment.amount = total_amount
+                payment.stripe_payment_intent_id = intent.id
                 payment.save()
                 
-                # Update order status to confirmed
-                order.status = 'confirmed'
-                order.save()
-                
-                # Send confirmation emails
-                try:
-                    send_order_confirmation_email(order, payment)
-                    send_restaurant_notification_email(order, payment)
-                except Exception as e:
-                    logger.error(f"Failed to send emails for order {order.id}: {str(e)}")
-                
                 return JsonResponse({
+                    'client_secret': intent.client_secret,
                     'payment_id': str(payment.id),
-                    'status': 'confirmed',
-                    'message': 'Order confirmed for cash on delivery'
+                    'deposit_amount': float(deposit_amount),
+                    'remaining_amount': float(total_amount - deposit_amount),
+                    'message': 'Pay 60% deposit now, remaining 40% on delivery'
                 })
             
             # For card and M-Pesa payments, create Stripe Payment Intent

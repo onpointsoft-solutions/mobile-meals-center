@@ -5,13 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Confirmation - Mobile Meals Center</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333333 !important;
             background-color: #f8f9fa;
             margin: 0;
             padding: 20px;
+            width: 100% !important;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
         }
         .container {
             max-width: 600px;
@@ -47,11 +55,16 @@
             overflow: hidden;
             margin: 20px 0;
         }
+        .order-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
         .order-details th,
         .order-details td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #dee2e6;
+            color: #333333 !important;
         }
         .order-details th {
             background: #f8f9fa;
@@ -181,7 +194,7 @@
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-                <a href="https://mobilemealscenter.pythonanywhere.com/orders/{{ order.id }}/" class="btn">Track Your Order</a>
+                <a href="https://mobilemealscenter.co.ke/orders/{{ order.id }}/" class="btn" style="display: inline-block; padding: 12px 24px; background: #ff6b35; color: white !important; text-decoration: none; border-radius: 5px; font-weight: bold;">Track Your Order</a>
             </div>
             
             <p><strong>What's next?</strong></p>
@@ -194,9 +207,10 @@
         </div>
         
         <div class="footer">
-            <p><strong>Mobile Meals Center</strong></p>
-            <p>📧 support@mobilemeals.com | 📞 +254 702502952</p>
-            <p>Thank you for choosing Mobile Meals Center!</p>
+            <p style="color: white !important;"><strong>Mobile Meals Center</strong></p>
+            <p style="color: white !important;">📧 mobilemealscenter@gmail.com | 📞 +254 702502952</p>
+            <p style="color: white !important;">Thank you for choosing Mobile Meals Center!</p>
+            <p style="color: white !important; margin-top: 10px;"><a href="https://mobilemealscenter.co.ke" style="color: #ffc107; text-decoration: none;">Visit our website</a></p>
         </div>
     </div>
 </body>

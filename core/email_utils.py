@@ -146,11 +146,11 @@ Order Update: #{order.order_number}
 
 {status_messages.get(new_status, f'Your order status has been updated to {new_status}.')}
 
-Track your order: http://127.0.0.1:8000/orders/{order.id}/
+Track your order: https://mobilemealscenter.co.ke/orders/{order.id}/
 
 ---
 Mobile Meals Center
-📧 support@mobilemeals.com | 📞 +254 700 123 456
+📧 mobilemealscenter@gmail.com | 📞 +254 702502952
 """
         
         email = EmailMultiAlternatives(
