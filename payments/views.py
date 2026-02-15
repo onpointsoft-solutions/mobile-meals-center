@@ -20,6 +20,29 @@ from core.email_utils import send_order_confirmation_email, send_restaurant_noti
 logger = logging.getLogger(__name__)
 
 
+class PaystackKeyTestView(LoginRequiredMixin, View):
+    """Test endpoint to verify Paystack keys are loaded"""
+    
+    def get(self, request):
+        try:
+            public_key = settings.PAYSTACK_PUBLIC_KEY
+            secret_key = settings.PAYSTACK_SECRET_KEY
+            
+            response_data = {
+                'public_key_loaded': bool(public_key),
+                'secret_key_loaded': bool(secret_key),
+                'public_key_prefix': public_key[:10] if public_key else None,
+                'secret_key_prefix': secret_key[:10] if secret_key else None,
+                'public_key_format_valid': public_key.startswith('pk_') if public_key else False,
+                'secret_key_format_valid': secret_key.startswith('sk_') if secret_key else False,
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
 class CreatePaymentIntentView(LoginRequiredMixin, View):
     """Create Paystack transaction for the order"""
     
