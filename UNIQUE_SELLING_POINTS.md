@@ -57,7 +57,7 @@ Mobile Meals Center is a comprehensive food delivery platform built with Django 
 
 ### 9. **Transparent Pricing**
 - **KES Currency**: All prices displayed in Kenyan Shillings
-- **Clear Breakdown**: Subtotal, delivery fee (KES 3.99), and 8% tax shown separately
+- **Clear Breakdown**: Subtotal, delivery fee (KES 50.00), and 8% tax shown separately
 - **No Hidden Fees**: What you see is what you pay
 
 ### 10. **Mobile-First Design**

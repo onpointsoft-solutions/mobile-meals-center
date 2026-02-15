@@ -12,7 +12,7 @@ def multiply(value, arg):
         return 0
 
 @register.filter
-def calculate_tax(subtotal, delivery_fee=3.99):
+def calculate_tax(subtotal, delivery_fee=50.00):
     """Calculate 8% tax on subtotal + delivery fee."""
     try:
         total_before_tax = Decimal(str(subtotal)) + Decimal(str(delivery_fee))
@@ -21,7 +21,7 @@ def calculate_tax(subtotal, delivery_fee=3.99):
         return 0
 
 @register.filter
-def calculate_total(subtotal, delivery_fee=3.99):
+def calculate_total(subtotal, delivery_fee=50.00):
     """Calculate final total with delivery fee and 8% tax."""
     try:
         subtotal_decimal = Decimal(str(subtotal))

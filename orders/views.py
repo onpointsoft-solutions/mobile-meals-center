@@ -43,7 +43,7 @@ class OrderDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         
         # Calculate order totals
         subtotal = order.total_amount
-        delivery_fee = Decimal('3.99')
+        delivery_fee = Decimal('50.00')
         subtotal_with_delivery = subtotal + delivery_fee
         tax_amount = subtotal_with_delivery * Decimal('0.08')
         final_total = subtotal_with_delivery + tax_amount

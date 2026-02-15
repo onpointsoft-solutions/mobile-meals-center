@@ -14,7 +14,7 @@ def send_order_confirmation_email(order, payment):
     try:
         # Calculate totals for email
         subtotal = order.total_amount
-        delivery_fee = Decimal('3.99')
+        delivery_fee = Decimal('50.00')
         tax_rate = Decimal('0.08')
         tax_amount = (subtotal + delivery_fee) * tax_rate
         total_amount = subtotal + delivery_fee + tax_amount
@@ -62,7 +62,7 @@ def send_restaurant_notification_email(order, payment):
         
         # Calculate totals for email
         subtotal = order.total_amount
-        delivery_fee = Decimal('3.99')
+        delivery_fee = Decimal('50.00')
         tax_rate = Decimal('0.08')
         tax_amount = (subtotal + delivery_fee) * tax_rate
         total_amount = subtotal + delivery_fee + tax_amount

@@ -136,7 +136,7 @@
                             <i class="bi bi-shield-check text-success me-2"></i>
                             <div class="text-start">
                                 <div class="small fw-bold text-success">Secure Checkout</div>
-                                <div class="small text-muted">Powered by Stripe</div>
+                                <div class="small text-muted">Powered by Paystack</div>
                             </div>
                         </div>
                     </div>
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (subtotalElement) {
         const subtotalText = subtotalElement.textContent.replace('KES', '');
         const subtotal = parseFloat(subtotalText) || 0;
-        const deliveryFee = 3.99;
+        const deliveryFee = 50.00;
         const taxRate = 0.08;
         
         const subtotalWithDelivery = subtotal + deliveryFee;
