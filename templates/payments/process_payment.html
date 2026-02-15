@@ -58,7 +58,7 @@
                 <h1 class="fw-bold">
                     <i class="bi bi-credit-card me-2 text-primary"></i>Secure Payment
                 </h1>
-                <p class="text-muted">Complete your order securely with Stripe</p>
+                <p class="text-muted">Complete your order securely with Paystack</p>
             </div>
             
             <div class="row g-5">
@@ -67,7 +67,7 @@
                     <div class="secure-payment">
                         <i class="bi bi-shield-check display-6 mb-2"></i>
                         <h5 class="mb-1">Secure & Convenient</h5>
-                        <small>Your order is safe with us. Pay cash on delivery!</small>
+                        <small>Your order is safe with us. Choose your preferred payment method!</small>
                     </div>
                     
                     <!-- Payment Method Selection -->
@@ -79,10 +79,28 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <!-- Cash on Delivery - Primary Option -->
+                                <!-- Paystack Card Payment - Primary Option -->
                                 <div class="col-md-12">
                                     <div class="form-check payment-method-option">
-                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="cash" checked>
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="paystackCard" value="paystack" checked>
+                                        <label class="form-check-label w-100" for="paystackCard">
+                                            <div class="d-flex align-items-center p-4 border border-primary rounded bg-light">
+                                                <i class="bi bi-credit-card fs-3 text-primary me-3"></i>
+                                                <div class="flex-grow-1">
+                                                    <strong class="fs-5">Pay with Card/Mobile Money</strong>
+                                                    <div class="text-muted">Secure payment via Paystack (Card, Bank Transfer, USSD)</div>
+                                                    <span class="badge bg-primary mt-2">Instant Payment</span>
+                                                </div>
+                                                <i class="bi bi-check-circle-fill fs-4 text-primary"></i>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cash on Delivery -->
+                                <div class="col-md-12 mt-3">
+                                    <div class="form-check payment-method-option">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" id="cashOnDelivery" value="cash">
                                         <label class="form-check-label w-100" for="cashOnDelivery">
                                             <div class="d-flex align-items-center p-4 border border-success rounded bg-light">
                                                 <i class="bi bi-cash-coin fs-3 text-success me-3"></i>
@@ -96,136 +114,49 @@
                                         </label>
                                     </div>
                                 </div>
-                                
-                                <!-- Coming Soon Options -->
-                                <div class="col-12 mt-4">
-                                    <h6 class="text-muted mb-3">
-                                        <i class="bi bi-clock-history me-2"></i>Coming Soon
-                                    </h6>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="position-relative">
-                                        <div class="d-flex align-items-center p-3 border rounded opacity-50">
-                                            <i class="bi bi-credit-card fs-4 text-muted me-3"></i>
-                                            <div>
-                                                <strong>Credit/Debit Card</strong>
-                                                <div class="small text-muted">Visa, Mastercard, Amex</div>
-                                            </div>
-                                        </div>
-                                        <span class="position-absolute top-0 end-0 badge bg-warning m-2">Coming Soon</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <div class="position-relative">
-                                        <div class="d-flex align-items-center p-3 border rounded opacity-50">
-                                            <i class="bi bi-phone fs-4 text-muted me-3"></i>
-                                            <div>
-                                                <strong>M-Pesa</strong>
-                                                <div class="small text-muted">Mobile money payment</div>
-                                            </div>
-                                        </div>
-                                        <span class="position-absolute top-0 end-0 badge bg-warning m-2">Coming Soon</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Card Payment Form -->
-                    <div class="card" id="cardPaymentForm">
+                    <!-- Paystack Payment Form -->
+                    <div class="card" id="paystackPaymentForm">
                         <div class="card-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-credit-card me-2"></i>Card Information
+                                <i class="bi bi-credit-card me-2"></i>Paystack Payment
                             </h5>
                         </div>
                         <div class="card-body">
-                            <form id="payment-form" class="payment-form">
-                                {% csrf_token %}
-                                
-                                <!-- Card Element -->
-                                <div class="mb-4">
-                                    <label for="card-element" class="form-label">
-                                        Credit or Debit Card
-                                    </label>
-                                    <div id="card-element" class="StripeElement">
-                                        <!-- Stripe Elements will create form elements here -->
-                                    </div>
-                                    <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Paystack Payment Options:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Credit/Debit Cards (Visa, Mastercard, Verve)</li>
+                                    <li>Bank Transfer (GTBank, Access Bank, etc.)</li>
+                                    <li>USSD (Dial *737# for GTB, *945# for Access)</li>
+                                    <li>Mobile Money (Paga, Barter, etc.)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="text-center mb-4">
+                                <img src="https://paystack.co/assets/img/brand/paystack-logo.svg" alt="Paystack" style="height: 40px;">
+                            </div>
+                            
+                            <!-- Payment Button -->
+                            <button id="submit-paystack-payment" class="btn btn-primary btn-lg w-100">
+                                <span id="paystack-button-text">
+                                    <i class="bi bi-lock me-2"></i>Pay KES{{ total_amount|floatformat:2 }} with Paystack
+                                </span>
+                                <div id="paystack-spinner" class="spinner-border spinner-border-sm ms-2" role="status" style="display: none;">
+                                    <span class="visually-hidden">Loading...</span>
                                 </div>
-                                
-                                <!-- Billing Information -->
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label for="billing-name" class="form-label">Full Name</label>
-                                        <input type="text" class="form-control" id="billing-name" 
-                                               value="{{ user.get_full_name }}" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="billing-email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="billing-email" 
-                                               value="{{ user.email }}" required>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-4">
-                                    <label for="billing-address" class="form-label">Billing Address</label>
-                                    <textarea class="form-control" id="billing-address" rows="2" 
-                                              placeholder="Enter your billing address">{{ user.address }}</textarea>
-                                </div>
-                                
-                                <!-- Payment Button -->
-                                <button id="submit-payment" class="btn btn-primary btn-lg w-100">
-                                    <span id="button-text">
-                                        <i class="bi bi-lock me-2"></i>Pay KES{{ total_amount|floatformat:2 }}
-                                    </span>
-                                    <div id="spinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></div>
-                                </button>
-                                
-                                <div class="text-center mt-3">
-                                    <small class="text-muted">
-                                        <i class="bi bi-shield-check me-1"></i>
-                                        Secured by Stripe • Your payment information is safe
-                                    </small>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- M-Pesa Payment Form -->
-                    <div class="card" id="mpesaPaymentForm" style="display: none;">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-phone me-2"></i>M-Pesa Information
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="mpesa-form" class="payment-form">
-                                <div class="mb-4">
-                                    <label for="mpesa-phone" class="form-label">M-Pesa Phone Number</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">+254</span>
-                                        <input type="tel" class="form-control" id="mpesa-phone" 
-                                               placeholder="7XXXXXXXX" pattern="[0-9]{9}" required>
-                                    </div>
-                                    <div class="form-text">Enter your M-Pesa registered phone number</div>
-                                </div>
-                                
-                                <div class="alert alert-info">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    <strong>How M-Pesa payment works:</strong>
-                                    <ol class="mb-0 mt-2">
-                                        <li>Click "Pay with M-Pesa" below</li>
-                                        <li>You'll receive an STK push notification on your phone</li>
-                                        <li>Enter your M-Pesa PIN to complete payment</li>
-                                        <li>You'll receive a confirmation SMS</li>
-                                    </ol>
-                                </div>
-                                
-                                <!-- Payment Button -->
-                                <button id="submit-mpesa-payment" class="btn btn-success btn-lg w-100">
-                                    <span id="mpesa-button-text">
+                            </button>
+                            
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Secured by Paystack • Your payment information is safe
+                                </small>
+                            </div>
                         </div>
                     </div>
                     
@@ -338,8 +269,83 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Payment method switching
+    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    const paystackPaymentForm = document.getElementById('paystackPaymentForm');
+    const cashPaymentForm = document.getElementById('cashPaymentForm');
+    
+    paymentMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Hide all forms first
+            paystackPaymentForm.style.display = 'none';
+            cashPaymentForm.style.display = 'none';
+            
+            // Show the selected form
+            if (this.value === 'paystack') {
+                paystackPaymentForm.style.display = 'block';
+            } else if (this.value === 'cash') {
+                cashPaymentForm.style.display = 'block';
+            }
+        });
+    });
+    
+    // Show Paystack form by default
+    paystackPaymentForm.style.display = 'block';
+    
+    // Handle Paystack payment submission
+    const paystackSubmitButton = document.getElementById('submit-paystack-payment');
+    
+    paystackSubmitButton.addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        const paystackButtonText = document.getElementById('paystack-button-text');
+        const paystackSpinner = document.getElementById('paystack-spinner');
+        
+        // Disable submit button and show loading
+        paystackSubmitButton.disabled = true;
+        paystackButtonText.textContent = 'Initializing Payment...';
+        paystackSpinner.style.display = 'inline-block';
+        
+        try {
+            // Create Paystack transaction
+            const response = await fetch('{% url "payments:create_payment_intent" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    order_id: '{{ order.id }}',
+                    payment_method_type: 'paystack'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Redirect to Paystack payment page
+            if (data.success && data.authorization_url) {
+                window.location.href = data.authorization_url;
+            } else {
+                throw new Error('Payment initialization failed');
+            }
+            
+        } catch (error) {
+            console.error('Paystack payment error:', error);
+            alert('Payment initialization failed: ' + error.message);
+            
+            // Re-enable submit button
+            paystackSubmitButton.disabled = false;
+            paystackButtonText.innerHTML = '<i class="bi bi-lock me-2"></i>Pay KES{{ total_amount|floatformat:2 }} with Paystack';
+            paystackSpinner.style.display = 'none';
+        }
+    });
     
     // Handle Cash on Delivery submission
     const cashSubmitButton = document.getElementById('submit-cash-payment');

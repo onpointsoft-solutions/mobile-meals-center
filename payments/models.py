@@ -16,7 +16,7 @@ class Payment(models.Model):
     )
     
     PAYMENT_METHOD_CHOICES = (
-        ('card', 'Credit/Debit Card'),
+        ('paystack', 'Paystack (Card/Mobile)'),
         ('mpesa', 'M-Pesa'),
         ('cash_on_delivery', 'Cash on Delivery'),
         ('paypal', 'PayPal'),
@@ -28,15 +28,15 @@ class Payment(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     
-    # Stripe fields
-    stripe_payment_intent_id = models.CharField(max_length=200, blank=True, null=True)
-    stripe_charge_id = models.CharField(max_length=200, blank=True, null=True)
+    # Paystack fields
+    paystack_reference = models.CharField(max_length=200, blank=True, null=True)
+    paystack_transaction_id = models.CharField(max_length=200, blank=True, null=True)
     
     # Payment details
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default='KES')
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='card')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='paystack')
     
     # Metadata
     failure_reason = models.TextField(blank=True, null=True)

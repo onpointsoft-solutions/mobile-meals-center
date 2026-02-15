@@ -173,11 +173,11 @@ DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemealscenter.com>'
 ADMINS = [('Admin', 'admin@mobilemealscenter.co.ke')]
 MANAGERS = ADMINS
 
-# Stripe Configuration - Disabled for now
-# Payment integration will be added later
-#STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
-#STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
-#STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+# Paystack Configuration
+# Get your keys from: https://dashboard.paystack.co/#/settings/keys
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_your_public_key_here')
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_your_secret_key_here')
+PAYSTACK_CALLBACK_URL = os.environ.get('PAYSTACK_CALLBACK_URL', 'https://mobilemealscenter.co.ke/payments/verify/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

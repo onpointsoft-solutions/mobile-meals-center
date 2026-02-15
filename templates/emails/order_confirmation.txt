@@ -19,7 +19,7 @@ Phone: {{ order.items.first.meal.restaurant.phone }}
 {% for item in order.items.all %}{{ item.quantity }}x {{ item.meal.name }} - KES{{ item.total }}
 {% endfor %}
 Subtotal: KES{{ order.total_amount }}
-Delivery Fee: KES3.99
+Delivery Fee: KES50.00
 Tax (8%): KES{{ tax_amount|floatformat:2 }}
 ---
 TOTAL: KES{{ total_amount|floatformat:2 }}
@@ -38,9 +38,9 @@ WHAT'S NEXT?
 • Our delivery partner will contact you when they're nearby
 • Enjoy your delicious meal! 🎉
 
-Track your order: http://127.0.0.1:8000/orders/{{ order.id }}/
+Track your order: https://mobilemealscenter.co.ke/orders/{{ order.id }}/
 
 ---
 Mobile Meals Center
-📧 support@mobilemeals.com | 📞 +254 700 123 456
+📧 support@mobilemealscenter.co.ke | 📞 +254 702502952
 Thank you for choosing Mobile Meals Center!

@@ -44,8 +44,8 @@ NEXT STEPS
 3. Mark as ready when the order is complete
 4. Coordinate with delivery for pickup
 
-View Order: http://127.0.0.1:8000/orders/{{ order.id }}/
-Dashboard: http://127.0.0.1:8000/restaurants/dashboard/
+View Order: https://mobilemealscenter.co.ke/orders/{{ order.id }}/
+Dashboard: https://mobilemealscenter.co.ke/restaurants/dashboard/
 
 ---
 Mobile Meals Center - Restaurant Partner
