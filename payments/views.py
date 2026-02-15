@@ -77,6 +77,12 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
             
             # Handle Paystack payment
             if payment_method_type == 'paystack':
+                # Check if Paystack keys are configured
+                if not settings.PAYSTACK_SECRET_KEY:
+                    return JsonResponse({
+                        'error': 'Paystack secret key not configured. Please check your environment variables.'
+                    }, status=400)
+                
                 # Generate unique reference
                 reference = f'MMC-{order.id}-{uuid.uuid4().hex[:8]}'
                 
@@ -164,7 +170,7 @@ class ProcessPaymentView(LoginRequiredMixin, TemplateView):
             'delivery_fee': delivery_fee,
             'tax_amount': tax_amount,
             'total_amount': total_amount,
-            'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY
+            'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY or 'not_configured'
         })
         return context
 
