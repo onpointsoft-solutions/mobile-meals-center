@@ -170,7 +170,7 @@ class ProcessPaymentView(LoginRequiredMixin, TemplateView):
             'delivery_fee': delivery_fee,
             'tax_amount': tax_amount,
             'total_amount': total_amount,
-            'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY or 'not_configured'
+            'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY
         })
         return context
 

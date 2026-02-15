@@ -179,6 +179,17 @@ PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', '')
 PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_CALLBACK_URL = os.environ.get('PAYSTACK_CALLBACK_URL', 'https://mobilemealscenter.co.ke/payments/verify/')
 
+# Production validation
+if not DEBUG:
+    # In production, require Paystack keys
+    if not PAYSTACK_PUBLIC_KEY or not PAYSTACK_SECRET_KEY:
+        raise ValueError("Paystack keys are required in production. Set PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY environment variables.")
+    
+    # Ensure using live keys in production
+    if not PAYSTACK_PUBLIC_KEY.startswith('pk_live_'):
+        import warnings
+        warnings.warn("Using test keys in production environment. Consider switching to live keys.", UserWarning)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
