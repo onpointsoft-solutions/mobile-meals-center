@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Payout Details - {{ payout.reference }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-receipt me-2"></i>Payout Details
+                    </h4>
+                    <div>
+                        <a href="{% url 'restaurants:payout_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Payouts
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Payout Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Payout Information</h6>
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Reference:</strong></td>
+                                            <td><code>{{ payout.reference }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Amount:</strong></td>
+                                            <td class="fw-bold text-success fs-5">KES {{ payout.amount|floatformat:2 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status:</strong></td>
+                                            <td>
+                                                {% if payout.status == 'completed' %}
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle me-1"></i>Completed
+                                                    </span>
+                                                {% elif payout.status == 'processing' %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="bi bi-clock me-1"></i>Processing
+                                                    </span>
+                                                {% elif payout.status == 'pending' %}
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-hourglass me-1"></i>Pending
+                                                    </span>
+                                                {% elif payout.status == 'failed' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle me-1"></i>Failed
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ payout.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Orders Included:</strong></td>
+                                            <td><span class="badge bg-info">{{ payout.orders.count }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Created:</strong></td>
+                                            <td>{{ payout.created_at|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% if payout.processed_at %}
+                                        <tr>
+                                            <td><strong>Processed:</strong></td>
+                                            <td>{{ payout.processed_at|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if payout.completed_at %}
+                                        <tr>
+                                            <td><strong>Completed:</strong></td>
+                                            <td>{{ payout.completed_at|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Payment Details</h6>
+                                    <table class="table table-sm table-borderless">
+                                        <tr>
+                                            <td><strong>Method:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.get_payout_method_display|default:"Not Set" }}</td>
+                                        </tr>
+                                        {% if payout.restaurant.payment_profile.payout_method == 'bank_transfer' or payout.restaurant.payment_profile.payout_method == 'paystack' %}
+                                        <tr>
+                                            <td><strong>Bank:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.bank_name|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Account:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.account_name|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Account Number:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.account_number|default:"-" }}</td>
+                                        </tr>
+                                        {% elif payout.restaurant.payment_profile.payout_method == 'mpesa_paybill' %}
+                                        <tr>
+                                            <td><strong>Paybill:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.mpesa_paybill_number|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Account:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.mpesa_account_number|default:"-" }}</td>
+                                        </tr>
+                                        {% elif payout.restaurant.payment_profile.payout_method == 'mpesa_till' %}
+                                        <tr>
+                                            <td><strong>Till Number:</strong></td>
+                                            <td>{{ payout.restaurant.payment_profile.mpesa_till_number|default:"-" }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Details -->
+                    {% if payout.transfer_code or payout.paystack_transfer_id %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Transaction Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                {% if payout.transfer_code %}
+                                <tr>
+                                    <td><strong>Transfer Code:</strong></td>
+                                    <td><code>{{ payout.transfer_code }}</code></td>
+                                </tr>
+                                {% endif %}
+                                {% if payout.paystack_transfer_id %}
+                                <tr>
+                                    <td><strong>Paystack Transfer ID:</strong></td>
+                                    <td><code>{{ payout.paystack_transfer_id }}</code></td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Failure Reason -->
+                    {% if payout.failure_reason %}
+                    <div class="card mb-4 border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">Failure Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-danger mb-0">{{ payout.failure_reason }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Notes -->
+                    {% if payout.notes %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Notes</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ payout.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Orders in this Payout -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Orders in this Payout ({{ payout.orders.count }})</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if payout.orders.exists %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Order Amount</th>
+                                            <th>Commission (15%)</th>
+                                            <th>Your Earning</th>
+                                            <th>Delivered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in payout.orders.all %}
+                                        <tr>
+                                            <td><a href="{% url 'orders:detail' pk=order.id %}">#{{ order.id }}</a></td>
+                                            <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+                                            <td>KES {{ order.total_amount|floatformat:2 }}</td>
+                                            <td>KES {{ order.total_amount|mul:0.15|floatformat:2 }}</td>
+                                            <td class="fw-bold text-success">KES {{ order.total_amount|mul:0.85|floatformat:2 }}</td>
+                                            <td>{{ order.delivered_at|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-0">No orders found in this payout.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Status Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="badge bg-primary me-3">1</div>
+                        <div>
+                            <h6 class="mb-1">Payout Created</h6>
+                            <p class="small text-muted mb-0">{{ payout.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if payout.processed_at %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="badge bg-warning me-3">2</div>
+                        <div>
+                            <h6 class="mb-1">Processing Started</h6>
+                            <p class="small text-muted mb-0">{{ payout.processed_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if payout.completed_at %}
+                    <div class="d-flex align-items-start">
+                        <div class="badge bg-success me-3">3</div>
+                        <div>
+                            <h6 class="mb-1">Payment Completed</h6>
+                            <p class="small text-muted mb-0">{{ payout.completed_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if payout.status == 'failed' %}
+                    <div class="d-flex align-items-start">
+                        <div class="badge bg-danger me-3">✗</div>
+                        <div>
+                            <h6 class="mb-1">Payment Failed</h6>
+                            <p class="small text-danger mb-0">{{ payout.failure_reason }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Help & Support</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-envelope me-1"></i>Contact Support
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-question-circle me-1"></i>View Help Center
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
