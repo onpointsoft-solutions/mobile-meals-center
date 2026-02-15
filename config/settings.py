@@ -175,8 +175,8 @@ MANAGERS = ADMINS
 
 # Paystack Configuration
 # Get your keys from: https://dashboard.paystack.co/#/settings/keys
-PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_your_public_key_here')
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_your_secret_key_here')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', '')
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_CALLBACK_URL = os.environ.get('PAYSTACK_CALLBACK_URL', 'https://mobilemealscenter.co.ke/payments/verify/')
 
 # Default primary key field type
