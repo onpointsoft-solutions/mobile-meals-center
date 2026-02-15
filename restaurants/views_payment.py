@@ -175,9 +175,19 @@ class InitiatePayoutView(LoginRequiredMixin, TemplateView):
                 earning.save()
                 payout.orders.add(earning.order)
             
-            # Initiate Paystack transfer if using Paystack
+            # Handle different payout methods
             if payment_profile.payout_method == 'paystack' and payment_profile.paystack_recipient_code:
                 self._initiate_paystack_transfer(payout, payment_profile)
+            elif payment_profile.payout_method in ['mpesa_paybill', 'mpesa_till']:
+                # For M-Pesa payouts, mark as processing (manual processing needed)
+                payout.status = 'processing'
+                payout.processed_at = timezone.now()
+                payout.save()
+                
+                if payment_profile.payout_method == 'mpesa_paybill':
+                    messages.success(request, f'Payout initiated for KES {total_amount}. M-Pesa Paybill transfer will be processed within 24-48 hours.')
+                else:
+                    messages.success(request, f'Payout initiated for KES {total_amount}. M-Pesa Till transfer will be processed within 24-48 hours.')
             else:
                 # For bank transfers, mark as processing (manual processing needed)
                 payout.status = 'processing'

@@ -18,7 +18,14 @@
                             <h6><i class="bi bi-info-circle me-2"></i>Payout Information</h6>
                             <p class="mb-2">
                                 <strong>Method:</strong> {{ payment_profile.get_payout_method_display }}<br>
-                                <strong>Account:</strong> {{ payment_profile.account_name }} ({{ payment_profile.bank_name }})<br>
+                                {% if payment_profile.payout_method == 'bank_transfer' or payment_profile.payout_method == 'paystack' %}
+                                    <strong>Account:</strong> {{ payment_profile.account_name }} ({{ payment_profile.bank_name }})<br>
+                                {% elif payment_profile.payout_method == 'mpesa_paybill' %}
+                                    <strong>Paybill:</strong> {{ payment_profile.mpesa_paybill_number }}<br>
+                                    <strong>Account:</strong> {{ payment_profile.mpesa_account_number }}<br>
+                                {% elif payment_profile.payout_method == 'mpesa_till' %}
+                                    <strong>Till Number:</strong> {{ payment_profile.mpesa_till_number }}<br>
+                                {% endif %}
                                 <strong>Status:</strong> 
                                 {% if payment_profile.is_verified %}
                                     <span class="badge bg-success">Verified</span>
