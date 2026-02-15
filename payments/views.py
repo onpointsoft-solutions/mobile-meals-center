@@ -79,9 +79,19 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
             if payment_method_type == 'paystack':
                 # Check if Paystack keys are configured
                 if not settings.PAYSTACK_SECRET_KEY:
+                    logger.error(f"Paystack secret key is empty. Public key: {settings.PAYSTACK_PUBLIC_KEY}")
                     return JsonResponse({
                         'error': 'Paystack secret key not configured. Please check your environment variables.'
                     }, status=400)
+                
+                # Validate secret key format
+                if not settings.PAYSTACK_SECRET_KEY.startswith('sk_'):
+                    logger.error(f"Invalid Paystack secret key format: {settings.PAYSTACK_SECRET_KEY[:10]}...")
+                    return JsonResponse({
+                        'error': 'Invalid Paystack secret key format. Key should start with "sk_".'
+                    }, status=400)
+                
+                logger.info(f"Using Paystack secret key: {settings.PAYSTACK_SECRET_KEY[:10]}...")
                 
                 # Generate unique reference
                 reference = f'MMC-{order.id}-{uuid.uuid4().hex[:8]}'
@@ -214,6 +224,12 @@ class PaystackVerificationView(LoginRequiredMixin, View):
             return redirect('core:home')
         
         try:
+            # Check if Paystack secret key is configured
+            if not settings.PAYSTACK_SECRET_KEY:
+                logger.error("Paystack secret key not configured for verification")
+                messages.error(request, 'Payment verification failed: Paystack not configured')
+                return redirect('core:home')
+            
             # Verify transaction with Paystack
             headers = {
                 'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
