@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Initiate Payout - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cash-stack me-2"></i>Initiate Payout
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if payment_profile %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Payout Information</h6>
+                            <p class="mb-2">
+                                <strong>Method:</strong> {{ payment_profile.get_payout_method_display }}<br>
+                                <strong>Account:</strong> {{ payment_profile.account_name }} ({{ payment_profile.bank_name }})<br>
+                                <strong>Status:</strong> 
+                                {% if payment_profile.is_verified %}
+                                    <span class="badge bg-success">Verified</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Not Verified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Payment Profile Required</h6>
+                            <p class="mb-2">You need to set up your payment profile before initiating payouts.</p>
+                            <a href="{% url 'restaurants:payment_profile' %}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-gear me-1"></i>Set Up Payment Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    {% if unpaid_earnings %}
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <h5 class="mb-3">Available Earnings</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Order Amount</th>
+                                            <th>Commission (15%)</th>
+                                            <th>Your Earning</th>
+                                            <th>Delivered</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for earning in unpaid_earnings %}
+                                        <tr>
+                                            <td>#{{ earning.order.id }}</td>
+                                            <td>{{ earning.order.customer.get_full_name|default:earning.order.customer.username }}</td>
+                                            <td>KES {{ earning.order_amount|floatformat:2 }}</td>
+                                            <td>KES {{ earning.commission_amount|floatformat:2 }}</td>
+                                            <td class="fw-bold text-success">KES {{ earning.restaurant_earning|floatformat:2 }}</td>
+                                            <td>{{ earning.order.delivered_at|date:"M d, Y H:i" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-primary fw-bold">
+                                            <td colspan="4">Total Payout Amount:</td>
+                                            <td colspan="2">KES {{ total_amount|floatformat:2 }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ unpaid_earnings|length }} orders • 15% commission deducted
+                                    </small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success btn-lg" 
+                                        {% if not payment_profile or not payment_profile.is_verified %}disabled{% endif %}>
+                                    <i class="bi bi-cash-stack me-2"></i>
+                                    Initiate Payout - KES {{ total_amount|floatformat:2 }}
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>No Available Earnings</h6>
+                            <p class="mb-0">You have no unpaid earnings from delivered orders at this time.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Payout Process</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="badge bg-primary me-3">1</div>
+                        <div>
+                            <h6 class="mb-1">Orders Delivered</h6>
+                            <p class="small text-muted mb-0">Customer orders must be marked as delivered</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="badge bg-primary me-3">2</div>
+                        <div>
+                            <h6 class="mb-1">Earnings Calculated</h6>
+                            <p class="small text-muted mb-0">15% commission deducted, remaining amount is your earning</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="badge bg-primary me-3">3</div>
+                        <div>
+                            <h6 class="mb-1">Initiate Payout</h6>
+                            <p class="small text-muted mb-0">Click the initiate payout button to request payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-start">
+                        <div class="badge bg-success me-3">4</div>
+                        <div>
+                            <h6 class="mb-1">Payment Processed</h6>
+                            <p class="small text-muted mb-0">Funds transferred to your bank account</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Commission Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Commission Rate:</span>
+                            <strong>15%</strong>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <span>Your Earning:</span>
+                            <strong>85%</strong>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Commission covers platform costs, payment processing, and support services
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

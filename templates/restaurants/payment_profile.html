@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Payment Profile - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-credit-card me-2"></i>Payment Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.payout_method|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.account_type|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h5 class="mb-3">Bank Details</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.bank_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.bank_code|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.account_number|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.account_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                {% if object.is_verified %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>Verified
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Not Verified
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {% if object.paystack_recipient_code %}
+                                    <button type="button" class="btn btn-outline-success btn-sm" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Paystack Verified
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="verify-paystack">
+                                        <i class="bi bi-shield-check me-1"></i>Verify with Paystack
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Save Payment Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Payment Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>About Payouts</h6>
+                        <ul class="mb-0 small">
+                            <li>Payouts are processed after order delivery</li>
+                            <li>15% commission is deducted from each order</li>
+                            <li>Bank transfers: 24-48 hours processing</li>
+                            <li>Paystack transfers: Instant (when available)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-shield-check me-2"></i>Security</h6>
+                        <p class="small mb-0">Your bank details are encrypted and stored securely. We only use them for processing your payouts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('verify-paystack')?.addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-spinner me-1"></i>Verifying...';
+    
+    fetch('{% url "restaurants:verify_paystack_recipient" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Verification failed: ' + data.error);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during verification');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+});
+</script>
+{% endblock %}

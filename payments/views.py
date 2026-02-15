@@ -125,8 +125,15 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
                     'Content-Type': 'application/json'
                 }
                 
+                # Validate user email
+                user_email = request.user.email
+                if not user_email:
+                    # Fallback to username with domain
+                    user_email = f"{request.user.username}@mobilemealscenter.co.ke"
+                    logger.warning(f"User email empty, using fallback: {user_email}")
+                
                 payload = {
-                    'email': request.user.email,
+                    'email': user_email,
                     'amount': amount_in_kobo,
                     'reference': reference,
                     'callback_url': settings.PAYSTACK_CALLBACK_URL,

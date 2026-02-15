@@ -24,3 +24,7 @@ class Restaurant(models.Model):
     
     def get_absolute_url(self):
         return reverse('restaurants:detail', kwargs={'pk': self.pk})
+
+
+# Import payment models
+from .models_payment import RestaurantPaymentProfile, RestaurantPayout, RestaurantEarning

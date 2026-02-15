@@ -122,6 +122,16 @@
                         <a href="{% url 'orders:list' %}" class="btn btn-outline-success">
                             <i class="bi bi-receipt me-2"></i>View Orders
                         </a>
+                        <hr>
+                        <a href="{% url 'restaurants:payment_profile' %}" class="btn btn-outline-info">
+                            <i class="bi bi-credit-card me-2"></i>Payment Profile
+                        </a>
+                        <a href="{% url 'restaurants:initiate_payout' %}" class="btn btn-outline-warning">
+                            <i class="bi bi-cash-stack me-2"></i>Initiate Payout
+                        </a>
+                        <a href="{% url 'restaurants:payout_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-clock-history me-2"></i>Payout History
+                        </a>
                         <a href="{% url 'restaurants:edit' pk=restaurant.pk %}" class="btn btn-outline-secondary">
                             <i class="bi bi-gear me-2"></i>Restaurant Settings
                         </a>
