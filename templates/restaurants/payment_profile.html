@@ -26,24 +26,74 @@
                             </div>
                         </div>
                         
-                        <hr>
-                        
-                        <h5 class="mb-3">Bank Details</h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.bank_name|as_crispy_field }}
+                        <!-- Bank Details Section -->
+                        <div id="bank-details-section">
+                            <hr>
+                            <h5 class="mb-3">Bank Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.bank_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.bank_code|as_crispy_field }}
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                {{ form.bank_code|as_crispy_field }}
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.account_number|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.account_name|as_crispy_field }}
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.account_number|as_crispy_field }}
+                        <!-- M-Pesa Paybill Section -->
+                        <div id="mpesa-paybill-section" style="display: none;">
+                            <hr>
+                            <h5 class="mb-3">M-Pesa Paybill Details</h5>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>M-Pesa Paybill:</strong> Customers will pay to your business Paybill number with your account number.
                             </div>
-                            <div class="col-md-6">
-                                {{ form.account_name|as_crispy_field }}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="mpesa_paybill_number" class="form-label">Paybill Number</label>
+                                    <input type="text" class="form-control" id="mpesa_paybill_number" name="mpesa_paybill_number" 
+                                           placeholder="e.g., 123456" maxlength="10" value="{{ object.mpesa_paybill_number }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="mpesa_account_number" class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" id="mpesa_account_number" name="mpesa_account_number" 
+                                           placeholder="Your business account number" value="{{ object.mpesa_account_number }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- M-Pesa Till Section -->
+                        <div id="mpesa-till-section" style="display: none;">
+                            <hr>
+                            <h5 class="mb-3">M-Pesa Till Number Details</h5>
+                            <div class="alert alert-success">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>M-Pesa Till:</strong> Customers will pay directly to your business Till number. No account number needed.
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="mpesa_till_number" class="form-label">Till Number</label>
+                                    <input type="text" class="form-control" id="mpesa_till_number" name="mpesa_till_number" 
+                                           placeholder="e.g., 123456" maxlength="10" value="{{ object.mpesa_till_number }}">
+                                    <div class="form-text">Enter your business Till number</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mt-4">
+                                        <small class="text-muted">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            No account number required for Till payments
+                                        </small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -110,36 +160,74 @@
 </div>
 
 <script>
-document.getElementById('verify-paystack')?.addEventListener('click', function() {
-    const btn = this;
-    const originalText = btn.innerHTML;
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle payment method switching
+    const payoutMethodSelect = document.getElementById('id_payout_method');
+    const bankSection = document.getElementById('bank-details-section');
+    const mpesaPaybillSection = document.getElementById('mpesa-paybill-section');
+    const mpesaTillSection = document.getElementById('mpesa-till-section');
     
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-spinner me-1"></i>Verifying...';
+    function togglePaymentSections() {
+        const selectedMethod = payoutMethodSelect.value;
+        
+        // Hide all sections first
+        bankSection.style.display = 'none';
+        mpesaPaybillSection.style.display = 'none';
+        mpesaTillSection.style.display = 'none';
+        
+        // Show relevant section
+        switch(selectedMethod) {
+            case 'bank_transfer':
+            case 'paystack':
+                bankSection.style.display = 'block';
+                break;
+            case 'mpesa_paybill':
+                mpesaPaybillSection.style.display = 'block';
+                break;
+            case 'mpesa_till':
+                mpesaTillSection.style.display = 'block';
+                break;
+        }
+    }
     
-    fetch('{% url "restaurants:verify_paystack_recipient" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify({})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Verification failed: ' + data.error);
+    // Initial setup
+    togglePaymentSections();
+    
+    // Listen for changes
+    payoutMethodSelect.addEventListener('change', togglePaymentSections);
+    
+    // Paystack verification
+    document.getElementById('verify-paystack')?.addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-spinner me-1"></i>Verifying...';
+        
+        fetch('{% url "restaurants:verify_paystack_recipient" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Verification failed: ' + data.error);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred during verification');
             btn.disabled = false;
             btn.innerHTML = originalText;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred during verification');
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        });
     });
 });
 </script>

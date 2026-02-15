@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView, ListView, DetailView, UpdateView
+from django.views.generic import TemplateView, ListView, DetailView, UpdateView, View
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +14,7 @@ import logging
 import requests
 import uuid
 
+from django.db import models
 from .models import Restaurant, RestaurantPaymentProfile, RestaurantPayout, RestaurantEarning
 from orders.models import Order
 
@@ -38,6 +40,15 @@ class RestaurantPaymentProfileView(LoginRequiredMixin, UpdateView):
     
     def form_valid(self, form):
         form.instance.restaurant = get_object_or_404(Restaurant, owner=self.request.user)
+        
+        # Handle M-Pesa fields from POST data
+        if 'mpesa_paybill_number' in self.request.POST:
+            form.instance.mpesa_paybill_number = self.request.POST.get('mpesa_paybill_number', '')
+        if 'mpesa_till_number' in self.request.POST:
+            form.instance.mpesa_till_number = self.request.POST.get('mpesa_till_number', '')
+        if 'mpesa_account_number' in self.request.POST:
+            form.instance.mpesa_account_number = self.request.POST.get('mpesa_account_number', '')
+        
         messages.success(self.request, 'Payment details updated successfully!')
         return super().form_valid(form)
     

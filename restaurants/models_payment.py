@@ -9,6 +9,8 @@ class RestaurantPaymentProfile(models.Model):
     PAYOUT_METHODS = (
         ('bank_transfer', 'Bank Transfer'),
         ('paystack', 'Paystack Transfer'),
+        ('mpesa_paybill', 'M-Pesa Paybill'),
+        ('mpesa_till', 'M-Pesa Till Number'),
     )
     
     BANK_TYPES = (
@@ -45,6 +47,11 @@ class RestaurantPaymentProfile(models.Model):
     # Paystack recipient code (if using Paystack transfers)
     paystack_recipient_code = models.CharField(max_length=100, blank=True, null=True)
     paystack_recipient_id = models.CharField(max_length=100, blank=True, null=True)
+    
+    # M-Pesa details
+    mpesa_paybill_number = models.CharField(max_length=10, blank=True, help_text="Business Paybill Number")
+    mpesa_till_number = models.CharField(max_length=10, blank=True, help_text="Business Till Number")
+    mpesa_account_number = models.CharField(max_length=20, blank=True, help_text="Account Number (for Paybill)")
     
     # Verification status
     is_verified = models.BooleanField(default=False)
