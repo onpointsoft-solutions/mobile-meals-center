@@ -202,16 +202,14 @@ ORDER ITEMS
         
         tax_amount = receipt.order.total_amount * Decimal('0.08')
         total_with_tax = receipt.order.total_amount + tax_amount
-        grand_total = total_with_tax + Decimal('50.00')
         
         text_content += f"""
 TOTAL BREAKDOWN
 ---------------
 Subtotal: KES {receipt.order.total_amount}
 Tax (8%): KES {tax_amount}
-Delivery Fee: KES 50.00
 -----------------
-TOTAL: KES {grand_total}
+TOTAL: KES {total_with_tax}
 
 Payment Method: {receipt.order.get_payment_method_display()}
 Paid at: {receipt.order.completed_at.strftime('%I:%M %p') if receipt.order.completed_at else 'N/A'}

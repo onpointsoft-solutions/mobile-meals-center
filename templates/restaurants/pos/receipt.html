@@ -53,7 +53,6 @@
                 <div class="mb-3">
                     {% with tax_amount=receipt.order.total_amount|mul:0.08 %}
                     {% with total_with_tax=receipt.order.total_amount|add:tax_amount %}
-                    {% with grand_total=total_with_tax|add:50 %}
                     <div class="d-flex justify-content-between mb-1">
                         <span>Subtotal:</span>
                         <span>KES {{ receipt.order.total_amount|floatformat:2 }}</span>
@@ -62,16 +61,11 @@
                         <span>Tax (8%):</span>
                         <span>KES {{ tax_amount|floatformat:2 }}</span>
                     </div>
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Delivery:</span>
-                        <span>KES 50.00</span>
-                    </div>
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <span>TOTAL:</span>
-                        <span>KES {{ grand_total|floatformat:2 }}</span>
+                        <span>KES {{ total_with_tax|floatformat:2 }}</span>
                     </div>
-                    {% endwith %}
                     {% endwith %}
                     {% endwith %}
                 </div>
