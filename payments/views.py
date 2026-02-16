@@ -87,8 +87,8 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
                 
                 # Send confirmation emails
                 try:
-                    send_order_confirmation_email(order)
-                    send_restaurant_notification_email(order)
+                    send_order_confirmation_email(order, payment)
+                    send_restaurant_notification_email(order, payment)
                 except Exception as email_error:
                     logger.error(f"Error sending emails: {str(email_error)}")
                 
@@ -290,8 +290,8 @@ class PaystackVerificationView(LoginRequiredMixin, View):
                 
                 # Send confirmation emails
                 try:
-                    send_order_confirmation_email(order)
-                    send_restaurant_notification_email(order)
+                    send_order_confirmation_email(order, payment)
+                    send_restaurant_notification_email(order, payment)
                 except Exception as e:
                     logger.error(f"Failed to send emails for order {order.id}: {str(e)}")
                 

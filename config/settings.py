@@ -166,11 +166,43 @@ LOGOUT_REDIRECT_URL = '/'
 
 # For production, use SMTP (uncomment and configure)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # or your SMTP server
+
+# Alternative SMTP services if Gmail fails:
+# 1. SendGrid (recommended for production)
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'apikey'
+# EMAIL_HOST_PASSWORD = 'YOUR_SENDGRID_API_KEY'
+
+# 2. Mailgun
+# EMAIL_HOST = 'smtp.mailgun.org'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'postmaster@yourdomain.com'
+# EMAIL_HOST_PASSWORD = 'YOUR_MAILGUN_PASSWORD'
+
+# 3. Brevo (Sendinblue)
+# EMAIL_HOST = 'smtp-relay.brevo.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your_email@domain.com'
+# EMAIL_HOST_PASSWORD = 'YOUR_BREVO_PASSWORD'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'mobilemealscenter@gmail.com'
 EMAIL_HOST_PASSWORD = 'bscc byhk wwgp odga'
+EMAIL_SSL_CERTFILE = None
+EMAIL_SSL_KEYFILE = None
+EMAIL_TIMEOUT = 30
+
+# Disable SSL certificate verification completely
+import ssl
+EMAIL_SSL_CONTEXT = ssl.create_default_context()
+EMAIL_SSL_CONTEXT.check_hostname = False
+EMAIL_SSL_CONTEXT.verify_mode = ssl.CERT_NONE
 
 # Default email settings
 DEFAULT_FROM_EMAIL = 'Mobile Meals Center <noreply@mobilemealscenter.com>'
