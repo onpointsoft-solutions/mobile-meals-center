@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Receipt {{ receipt.receipt_number }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Receipt Print Area -->
+            <div id="receipt-print" class="bg-white p-4" style="max-width: 400px; margin: 0 auto; font-family: monospace;">
+                <!-- Restaurant Header -->
+                <div class="text-center mb-4">
+                    <h4 class="mb-1">{{ receipt.order.restaurant.name }}</h4>
+                    <p class="mb-1">{{ receipt.order.restaurant.address|linebreaks }}</p>
+                    <p class="mb-1">{{ receipt.order.restaurant.phone }}</p>
+                    <hr>
+                </div>
+                
+                <!-- Receipt Info -->
+                <div class="text-center mb-3">
+                    <h5 class="mb-1">RECEIPT</h5>
+                    <p class="mb-1">No: {{ receipt.receipt_number }}</p>
+                    <p class="mb-1">Date: {{ receipt.order.created_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-1">Order: {{ receipt.order.order_number }}</p>
+                    {% if receipt.customer_name %}
+                    <p class="mb-1">Customer: {{ receipt.customer_name }}</p>
+                    {% endif %}
+                    <hr>
+                </div>
+                
+                <!-- Order Items -->
+                <div class="mb-3">
+                    {% for item in receipt.order.items.all %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <div>{{ item.quantity }}x {{ item.meal.name }}</div>
+                            {% if item.notes %}
+                            <div class="small text-muted">  {{ item.notes }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <div>KES {{ item.total_price|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <hr>
+                
+                <!-- Totals -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Subtotal:</span>
+                        <span>KES {{ receipt.order.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Tax (8%):</span>
+                        <span>KES {{ receipt.order.total_amount|mul:0.08|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Delivery:</span>
+                        <span>KES 50.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>TOTAL:</span>
+                        <span>KES {{ receipt.order.total_amount|add:receipt.order.total_amount|mul:0.08|add:50|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <!-- Payment Info -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Payment:</span>
+                        <span>{{ receipt.order.get_payment_method_display }}</span>
+                    </div>
+                    {% if receipt.order.completed_at %}
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Paid at:</span>
+                        <span>{{ receipt.order.completed_at|date:"H:i" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                
+                <!-- Footer -->
+                <div class="text-center mb-3">
+                    <p class="mb-1">Thank you for your order!</p>
+                    <p class="mb-1">Please come again</p>
+                    {% if receipt.order.restaurant.phone %}
+                    <p class="mb-1">For support: {{ receipt.order.restaurant.phone }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Barcode/QR Code placeholder -->
+                <div class="text-center">
+                    <div style="border: 1px solid #000; padding: 10px; display: inline-block;">
+                        <small>{{ receipt.receipt_number }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <button class="btn btn-primary me-2" onclick="printReceipt()">
+                    <i class="bi bi-printer me-2"></i>Print Receipt
+                </button>
+                {% if receipt.customer_email %}
+                <button class="btn btn-success me-2" onclick="emailReceipt()">
+                    <i class="bi bi-envelope me-2"></i>Email Receipt
+                </button>
+                {% endif %}
+                <a href="{% url 'restaurants:pos_main' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to POS
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function printReceipt() {
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    const receiptContent = document.getElementById('receipt-print').innerHTML;
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Receipt {{ receipt.receipt_number }}</title>
+                <style>
+                    body { font-family: monospace; margin: 20px; }
+                    .text-center { text-align: center; }
+                    .d-flex { display: flex; }
+                    .justify-content-between { justify-content: space-between; }
+                    .fw-bold { font-weight: bold; }
+                    hr { border: none; border-top: 1px solid #000; margin: 10px 0; }
+                    @media print {
+                        body { margin: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${receiptContent}
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+
+function emailReceipt() {
+    {% if receipt.customer_email %}
+    fetch('{% url "restaurants:pos_email_receipt" receipt.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Receipt emailed successfully to {{ receipt.customer_email }}');
+        } else {
+            alert('Error sending email: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send email');
+    });
+    {% else %}
+    alert('No customer email address provided');
+    {% endif %}
+}
+
+// Auto-print on load (optional)
+window.addEventListener('load', function() {
+    // Uncomment the next line if you want to auto-print
+    // setTimeout(printReceipt, 1000);
+});
+</script>
+{% endblock %}

@@ -28,3 +28,6 @@ class Restaurant(models.Model):
 
 # Import payment models
 from .models_payment import RestaurantPaymentProfile, RestaurantPayout, RestaurantEarning
+
+# Import POS models
+from .models_pos import POSSession, POSOrder, POSOrderItem, POSReceipt

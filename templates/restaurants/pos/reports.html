@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}POS Reports - {{ restaurant.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-graph-up me-2"></i>POS Reports
+        </h2>
+        <div>
+            <a href="{% url 'restaurants:pos_main' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to POS
+            </a>
+        </div>
+    </div>
+    
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel me-2"></i>Filter
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-secondary" onclick="setToday()">
+                        <i class="bi bi-calendar-day me-2"></i>Today
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <h2>KES {{ total_sales|floatformat:2 }}</h2>
+                    <small>{{ order_count }} orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Order Count</h5>
+                    <h2>{{ order_count }}</h2>
+                    <small>Completed orders</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Avg Order Value</h5>
+                    <h2>KES {{ avg_order_value|floatformat:2 }}</h2>
+                    <small>Per order</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Date Range</h5>
+                    <h2>{{ orders|length }}</h2>
+                    <small>Days analyzed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Payment Method Breakdown -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Payment Methods</h6>
+                </div>
+                <div class="card-body">
+                    {% for method in payment_breakdown %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="badge bg-{{ method.payment_method|payment_color }}">
+                                {{ method.get_payment_method_display }}
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold">KES {{ method.total|floatformat:2 }}</div>
+                            <small class="text-muted">{{ method.count }} orders</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Selling Items -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Top Selling Items</h6>
+                </div>
+                <div class="card-body">
+                    {% if top_items %}
+                        {% for item in top_items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <div class="fw-medium">{{ item.meal__name }}</div>
+                                <small class="text-muted">{{ item.quantity }} sold</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">KES {{ item.revenue|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No sales data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hourly Sales Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Hourly Sales</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for hour in hourly_sales %}
+                <div class="col-md-1 col-sm-2 col-3 text-center mb-3">
+                    <div class="small text-muted">{{ hour.hour }}:00</div>
+                    <div class="fw-bold">KES {{ hour.total|floatformat:0 }}</div>
+                    <div class="small text-muted">{{ hour.count }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Orders -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0">Recent Orders</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Time</th>
+                            <th>Amount</th>
+                            <th>Payment</th>
+                            <th>Customer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders|slice:":10" %}
+                        <tr>
+                            <td><code>{{ order.order_number }}</code></td>
+                            <td>{{ order.created_at|date:"H:i" }}</td>
+                            <td class="fw-bold">KES {{ order.total_amount|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-{{ order.payment_method|payment_color }}">
+                                    {{ order.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td>{{ order.customer_name|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function setToday() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('start_date').value = today;
+    document.getElementById('end_date').value = today;
+}
+</script>
+{% endblock %}
