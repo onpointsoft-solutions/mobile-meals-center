@@ -202,6 +202,10 @@
                href="{% url 'superadmin:complaints' %}">
                 <i class="bi bi-chat-left-text"></i> Complaints
             </a>
+            <a class="nav-link {% if 'pos' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'superadmin:pos_management' %}">
+                <i class="bi bi-shop"></i> POS Management
+            </a>
             <a class="nav-link {% if 'categor' in request.resolver_match.url_name %}active{% endif %}" 
                href="{% url 'superadmin:categories' %}">
                 <i class="bi bi-tags"></i> Categories

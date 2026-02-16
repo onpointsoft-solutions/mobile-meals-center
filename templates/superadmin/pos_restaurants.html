@@ -1,0 +1,209 @@
+{% extends 'superadmin/base.html' %}
+{% load static %}
+
+{% block title %}POS Restaurants - SuperAdmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-building me-2"></i>Restaurant POS Management
+        </h2>
+        <div>
+            <a href="{% url 'superadmin:pos_management' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to POS Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Restaurants</h5>
+                    <h2>{{ total_restaurants }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">POS Enabled</h5>
+                    <h2>{{ enabled_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">POS Disabled</h5>
+                    <h2>{{ disabled_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Filter by POS Status:</label>
+                    <div class="btn-group" role="group">
+                        <a href="?pos_status=" class="btn {% if not request.GET.pos_status %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            All
+                        </a>
+                        <a href="?pos_status=enabled" class="btn {% if request.GET.pos_status == 'enabled' %}btn-success{% else %}btn-outline-success{% endif %}">
+                            Enabled
+                        </a>
+                        <a href="?pos_status=disabled" class="btn {% if request.GET.pos_status == 'disabled' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                            Disabled
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Restaurants Table -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Restaurants</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Restaurant</th>
+                            <th>Owner</th>
+                            <th>POS Status</th>
+                            <th>POS Orders</th>
+                            <th>POS Sales</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for restaurant in restaurants %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if restaurant.logo %}
+                                    <img src="{{ restaurant.logo.url }}" class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-shop text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-medium">{{ restaurant.name }}</div>
+                                        <small class="text-muted">{{ restaurant.phone }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="fw-medium">{{ restaurant.owner.username }}</div>
+                                    <small class="text-muted">{{ restaurant.owner.email }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if restaurant.pos_enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                                {% else %}
+                                <span class="badge bg-warning">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-medium">{{ restaurant.pos_order_count|default:0 }}</span>
+                            </td>
+                            <td>
+                                <span class="fw-medium text-primary">KES {{ restaurant.pos_sales|floatformat:2|default:"0.00" }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if restaurant.pos_enabled %}
+                                    <button class="btn btn-outline-warning" onclick="togglePOS({{ restaurant.id }}, 'disable')">
+                                        <i class="bi bi-pause me-1"></i>Disable
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-outline-success" onclick="togglePOS({{ restaurant.id }}, 'enable')">
+                                        <i class="bi bi-play me-1"></i>Enable
+                                    </button>
+                                    {% endif %}
+                                    <a href="{% url 'superadmin:restaurant_detail' pk=restaurant.pk %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Restaurant pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.pos_status %}&pos_status={{ request.GET.pos_status }}{% endif %}">&laquo; First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.pos_status %}&pos_status={{ request.GET.pos_status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.pos_status %}&pos_status={{ request.GET.pos_status }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.pos_status %}&pos_status={{ request.GET.pos_status }}{% endif %}">Last &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePOS(restaurantId, action) {
+    const message = 'Are you sure you want to ' + action + ' POS access for this restaurant?';
+    if (confirm(message)) {
+        const url = '{% url "superadmin:pos_toggle" %}';
+        const csrfToken = '{{ csrf_token }}';
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrfToken
+            },
+            body: 'restaurant_id=' + restaurantId + '&action=' + action
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to toggle POS access');
+        });
+    }
+}
+</script>
+{% endblock %}

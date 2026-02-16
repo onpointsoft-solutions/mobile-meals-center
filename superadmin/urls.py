@@ -36,4 +36,10 @@ urlpatterns = [
     
     # Activity Log
     path('activity-log/', views.ActivityLogView.as_view(), name='activity_log'),
+    
+    # POS Management
+    path('pos/', views.POSManagementView.as_view(), name='pos_management'),
+    path('pos/toggle/', views.POSToggleView.as_view(), name='pos_toggle'),
+    path('pos/restaurants/', views.POSRestaurantsView.as_view(), name='pos_restaurants'),
+    path('pos/sessions/', views.POSSessionsView.as_view(), name='pos_sessions'),
 ]

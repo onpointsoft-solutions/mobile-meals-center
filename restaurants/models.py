@@ -13,6 +13,7 @@ class Restaurant(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    pos_enabled = models.BooleanField(default=True, help_text="Enable POS system for this restaurant")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

@@ -1,0 +1,182 @@
+{% extends 'superadmin/base.html' %}
+{% load static %}
+
+{% block title %}POS Management - SuperAdmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-shop me-2"></i>POS Management
+        </h2>
+        <div>
+            <a href="{% url 'superadmin:pos_restaurants' %}" class="btn btn-outline-primary">
+                <i class="bi bi-building me-2"></i>Manage Restaurants
+            </a>
+            <a href="{% url 'superadmin:pos_sessions' %}" class="btn btn-outline-info">
+                <i class="bi bi-clock-history me-2"></i>View Sessions
+            </a>
+        </div>
+    </div>
+    
+    <!-- POS Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Restaurants</h5>
+                    <h2>{{ total_restaurants }}</h2>
+                    <small>All registered restaurants</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">POS Enabled</h5>
+                    <h2>{{ pos_enabled_restaurants }}</h2>
+                    <small>Restaurants with POS access</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">POS Disabled</h5>
+                    <h2>{{ pos_disabled_restaurants }}</h2>
+                    <small>Restaurants without POS access</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Active Sessions</h5>
+                    <h2>{{ active_sessions }}</h2>
+                    <small>Currently active POS sessions</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today's Performance -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Today's POS Performance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-primary">KES {{ today_sales|floatformat:2 }}</h3>
+                                <small class="text-muted">Total Sales</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center">
+                                <h3 class="text-success">{{ today_order_count }}</h3>
+                                <small class="text-muted">Orders Completed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'superadmin:pos_restaurants' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-building me-2"></i>Manage Restaurant POS Access
+                        </a>
+                        <a href="{% url 'superadmin:pos_sessions' %}" class="btn btn-outline-info">
+                            <i class="bi bi-clock-history me-2"></i>View All POS Sessions
+                        </a>
+                        <a href="{% url 'superadmin:activity_log' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-ul me-2"></i>View POS Activity Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Top Restaurants by Sales -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Top Restaurants by POS Sales (Today)</h6>
+                </div>
+                <div class="card-body">
+                    {% if top_restaurants %}
+                        {% for restaurant in top_restaurants %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="fw-medium">{{ restaurant.name }}</div>
+                                <small class="text-muted">{{ restaurant.owner.username }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-primary">KES {{ restaurant.pos_sales|floatformat:2|default:"0.00" }}</div>
+                                <small class="text-muted">{{ restaurant.pos_order_count|default:0 }} orders</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No POS sales data available for today</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Recent POS Sessions</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_sessions %}
+                        {% for session in recent_sessions %}
+                        <div class="mb-3 pb-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-medium">{{ session.restaurant.name }}</div>
+                                    <small class="text-muted">by {{ session.opened_by.username }}</small>
+                                </div>
+                                <div class="text-end">
+                                    {% if session.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Closed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Opened: {{ session.opened_at|date:"H:i" }}
+                                    {% if session.closed_at %}
+                                    | Closed: {{ session.closed_at|date:"H:i" }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="mt-1">
+                                <small class="text-primary fw-medium">
+                                    Sales: KES {{ session.total_sales|floatformat:2 }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">No POS sessions found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

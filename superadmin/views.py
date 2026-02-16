@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from accounts.models import User
 from restaurants.models import Restaurant
+from restaurants.models_pos import POSSession, POSOrder, POSOrderItem
 from meals.models import Meal, Category
 from orders.models import Order, OrderItem
 from .models import AdminActivityLog, SystemSettings, Complaint
@@ -411,4 +412,149 @@ class UpdateComplaintStatusView(SuperAdminRequiredMixin, View):
         else:
             messages.error(request, 'Invalid status.')
         
-        return redirect('superadmin:complaint_detail', pk=pk)
+        return redirect('superadmin:complaint_detail', pk=complaint.pk)
+
+
+class POSManagementView(SuperAdminRequiredMixin, TemplateView):
+    """POS system management dashboard"""
+    template_name = 'superadmin/pos_management.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get POS statistics
+        total_restaurants = Restaurant.objects.count()
+        pos_enabled_restaurants = Restaurant.objects.filter(pos_enabled=True).count()
+        pos_disabled_restaurants = total_restaurants - pos_enabled_restaurants
+        
+        # Get active POS sessions
+        active_sessions = POSSession.objects.filter(is_active=True).count()
+        
+        # Get today's POS sales
+        from django.utils import timezone
+        today = timezone.now().date()
+        today_pos_orders = POSOrder.objects.filter(
+            created_at__date=today,
+            status='completed'
+        )
+        today_sales = today_pos_orders.aggregate(
+            total=Sum('total_amount')
+        )['total'] or Decimal('0.00')
+        today_order_count = today_pos_orders.count()
+        
+        # Get top restaurants by POS sales
+        top_restaurants = Restaurant.objects.annotate(
+            pos_sales=Sum('pos_orders__total_amount', filter=Q(
+                pos_orders__status='completed',
+                pos_orders__created_at__date=today
+            ))
+        ).order_by('-pos_sales')[:10]
+        
+        # Recent POS sessions
+        recent_sessions = POSSession.objects.select_related('restaurant', 'opened_by').order_by('-opened_at')[:10]
+        
+        context.update({
+            'total_restaurants': total_restaurants,
+            'pos_enabled_restaurants': pos_enabled_restaurants,
+            'pos_disabled_restaurants': pos_disabled_restaurants,
+            'active_sessions': active_sessions,
+            'today_sales': today_sales,
+            'today_order_count': today_order_count,
+            'top_restaurants': top_restaurants,
+            'recent_sessions': recent_sessions,
+        })
+        return context
+
+
+class POSToggleView(SuperAdminRequiredMixin, View):
+    """Toggle POS access for a restaurant"""
+    
+    def post(self, request):
+        restaurant_id = request.POST.get('restaurant_id')
+        action = request.POST.get('action')  # 'enable' or 'disable'
+        
+        if not restaurant_id or action not in ['enable', 'disable']:
+            return JsonResponse({'error': 'Invalid request'}, status=400)
+        
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        
+        old_status = restaurant.pos_enabled
+        new_status = action == 'enable'
+        
+        if old_status == new_status:
+            return JsonResponse({'error': f'POS is already {"enabled" if new_status else "disabled"}'}, status=400)
+        
+        restaurant.pos_enabled = new_status
+        restaurant.save()
+        
+        # Log activity
+        AdminActivityLog.objects.create(
+            admin=request.user,
+            action='update',
+            target_model='Restaurant',
+            target_id=restaurant.id,
+            description=f'{"Enabled" if new_status else "Disabled"} POS access for restaurant: {restaurant.name}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'POS {"enabled" if new_status else "disabled"} for {restaurant.name}',
+            'new_status': new_status
+        })
+
+
+class POSRestaurantsView(SuperAdminRequiredMixin, ListView):
+    """List all restaurants with POS settings"""
+    model = Restaurant
+    template_name = 'superadmin/pos_restaurants.html'
+    context_object_name = 'restaurants'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Restaurant.objects.select_related('owner').annotate(
+            pos_order_count=Count('pos_orders'),
+            pos_sales=Sum('pos_orders__total_amount', filter=Q(pos_orders__status='completed'))
+        ).order_by('-created_at')
+        
+        # Filter by POS status
+        pos_status = self.request.GET.get('pos_status')
+        if pos_status == 'enabled':
+            queryset = queryset.filter(pos_enabled=True)
+        elif pos_status == 'disabled':
+            queryset = queryset.filter(pos_enabled=False)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Statistics
+        context['total_restaurants'] = Restaurant.objects.count()
+        context['enabled_count'] = Restaurant.objects.filter(pos_enabled=True).count()
+        context['disabled_count'] = Restaurant.objects.filter(pos_enabled=False).count()
+        
+        return context
+
+
+class POSSessionsView(SuperAdminRequiredMixin, ListView):
+    """List all POS sessions"""
+    model = POSSession
+    template_name = 'superadmin/pos_sessions.html'
+    context_object_name = 'sessions'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return POSSession.objects.select_related('restaurant', 'opened_by').order_by('-opened_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Statistics
+        context['total_sessions'] = POSSession.objects.count()
+        context['active_sessions'] = POSSession.objects.filter(is_active=True).count()
+        context['total_sales'] = POSSession.objects.aggregate(
+            total=Sum('total_sales')
+        )['total'] or Decimal('0.00')
+        
+        return context

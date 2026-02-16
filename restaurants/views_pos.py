@@ -27,8 +27,13 @@ class POSMainView(LoginRequiredMixin, TemplateView):
             messages.error(request, 'Access denied. Restaurant owners only.')
             return redirect('restaurants:dashboard')
         
-        # Get or create active session
+        # Check if POS is enabled for this restaurant
         restaurant = get_object_or_404(Restaurant, owner=request.user)
+        if not restaurant.pos_enabled:
+            messages.error(request, 'POS system is disabled for your restaurant. Please contact support.')
+            return redirect('restaurants:dashboard')
+        
+        # Get or create active session
         active_session = POSSession.objects.filter(
             restaurant=restaurant, 
             is_active=True
