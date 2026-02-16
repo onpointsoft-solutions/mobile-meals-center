@@ -313,12 +313,17 @@ class POSReportsView(LoginRequiredMixin, TemplateView):
             item['revenue'] = item['quantity'] * item['total_price']
         
         # Hourly sales
-        hourly_sales = orders.extra({
-            'hour': "strftime('%%H', created_at)"
-        }).values('hour').annotate(
+        from django.db.models.functions import Trunc
+        hourly_sales = orders.annotate(
+            hour=Trunc('created_at', 'hour')
+        ).values('hour').annotate(
             total=Sum('total_amount'),
             count=Count('id')
         ).order_by('hour')
+        
+        # Format hour for display
+        for item in hourly_sales:
+            item['hour'] = item['hour'].hour
         
         context.update({
             'restaurant': restaurant,
