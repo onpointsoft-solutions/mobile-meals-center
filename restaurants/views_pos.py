@@ -207,6 +207,51 @@ class POSRemoveItemView(LoginRequiredMixin, View):
             return JsonResponse({'error': 'Failed to remove item'}, status=500)
 
 
+class POSUpdateItemQuantityView(LoginRequiredMixin, View):
+    """Update quantity of item in POS order"""
+    
+    def post(self, request):
+        if not request.user.is_restaurant:
+            return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        try:
+            data = json.loads(request.body)
+            item_id = data.get('item_id')
+            new_quantity = int(data.get('quantity', 1))
+            
+            if new_quantity < 1:
+                return JsonResponse({'error': 'Quantity must be at least 1'}, status=400)
+            
+            order_item = get_object_or_404(POSOrderItem, id=item_id)
+            order = order_item.order
+            
+            # Check if order belongs to user's restaurant
+            if order.restaurant.owner != request.user:
+                return JsonResponse({'error': 'Access denied'}, status=403)
+            
+            # Update quantity
+            order_item.quantity = new_quantity
+            order_item.save()
+            
+            # Update order total
+            total = order.items.aggregate(
+                total=Sum(F('quantity') * F('price'))
+            )['total'] or Decimal('0.00')
+            order.total_amount = total
+            order.save()
+            
+            return JsonResponse({
+                'success': True,
+                'item_total': float(order_item.total_price),
+                'order_total': float(order.total_amount),
+                'new_quantity': new_quantity
+            })
+            
+        except Exception as e:
+            logger.error(f"Error updating item quantity: {str(e)}")
+            return JsonResponse({'error': 'Failed to update quantity'}, status=500)
+
+
 class POSCompleteOrderView(LoginRequiredMixin, View):
     """Complete POS order with payment"""
     

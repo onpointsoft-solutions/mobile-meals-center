@@ -26,6 +26,7 @@ urlpatterns = [
     path('pos/create-order/', views_pos.POSCreateOrderView.as_view(), name='pos_create_order'),
     path('pos/add-item/', views_pos.POSAddItemView.as_view(), name='pos_add_item'),
     path('pos/remove-item/', views_pos.POSRemoveItemView.as_view(), name='pos_remove_item'),
+    path('pos/update-item-quantity/', views_pos.POSUpdateItemQuantityView.as_view(), name='pos_update_item_quantity'),
     path('pos/complete-order/', views_pos.POSCompleteOrderView.as_view(), name='pos_complete_order'),
     path('pos/reports/', views_pos.POSReportsView.as_view(), name='pos_reports'),
     path('pos/sessions/', views_pos.POSSessionsView.as_view(), name='pos_sessions'),

@@ -41,9 +41,9 @@
                     <div class="col-6 meal-item" data-category="{{ category.id|default:'all' }}" data-meal-id="{{ meal.id }}" data-meal-name="{{ meal.name }}" data-meal-price="{{ meal.price }}">
                         <div class="card h-100 text-center">
                             {% if meal.image %}
-                            <img src="{{ meal.image.url }}" class="card-img-top" style="height: 80px; object-fit: cover;" alt="{{ meal.name }}">
+                            <img src="{{ meal.image.url }}" class="card-img-top" style="height: 60px; object-fit: cover;" alt="{{ meal.name }}">
                             {% else %}
-                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 80px;">
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 60px;">
                                 <i class="bi bi-image text-muted fs-4"></i>
                             </div>
                             {% endif %}
@@ -53,6 +53,19 @@
                                 {% if meal.preparation_time %}
                                 <small class="text-muted">{{ meal.preparation_time }} min</small>
                                 {% endif %}
+                                
+                                <!-- Quantity Selector -->
+                                <div class="mt-2">
+                                    <div class="input-group input-group-sm" style="width: 100px; margin: 0 auto;">
+                                        <button class="btn btn-outline-secondary quantity-minus" type="button" data-meal-id="{{ meal.id }}">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <input type="number" class="form-control text-center quantity-input" data-meal-id="{{ meal.id }}" value="1" min="1" max="99" style="font-size: 0.8rem;">
+                                        <button class="btn btn-outline-secondary quantity-plus" type="button" data-meal-id="{{ meal.id }}">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -82,14 +95,30 @@
                     <div class="card-body">
                         {% if order.items.exists %}
                             {% for item in order.items.all %}
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div>
-                                    <span class="fw-medium">{{ item.quantity }}x {{ item.meal.name }}</span>
+                            <div class="d-flex justify-content-between align-items-center mb-2 order-item-row" data-item-id="{{ item.id }}">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center">
+                                        <span class="fw-medium">{{ item.quantity }}x {{ item.meal.name }}</span>
+                                        <div class="ms-2 btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-secondary item-quantity-minus" data-item-id="{{ item.id }}" data-quantity="{{ item.quantity }}">
+                                                <i class="bi bi-dash"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary item-quantity-plus" data-item-id="{{ item.id }}" data-quantity="{{ item.quantity }}">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger item-remove" data-item-id="{{ item.id }}">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                     {% if item.notes %}
                                     <br><small class="text-muted">{{ item.notes }}</small>
                                     {% endif %}
                                 </div>
-                                <span>KES {{ item.total_price }}</span>
+                                <div class="text-end">
+                                    <div class="fw-bold">KES {{ item.total_price }}</div>
+                                    <small class="text-muted">KES {{ item.price }} each</small>
+                                </div>
                             </div>
                             {% endfor %}
                         {% else %}
@@ -242,6 +271,31 @@ document.querySelectorAll('.category-tab').forEach(tab => {
     });
 });
 
+// Quantity controls for meal items
+document.querySelectorAll('.quantity-minus').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const mealId = this.dataset.mealId;
+        const input = document.querySelector(`.quantity-input[data-meal-id="${mealId}"]`);
+        const currentValue = parseInt(input.value);
+        if (currentValue > 1) {
+            input.value = currentValue - 1;
+        }
+    });
+});
+
+document.querySelectorAll('.quantity-plus').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const mealId = this.dataset.mealId;
+        const input = document.querySelector(`.quantity-input[data-meal-id="${mealId}"]`);
+        const currentValue = parseInt(input.value);
+        if (currentValue < 99) {
+            input.value = currentValue + 1;
+        }
+    });
+});
+
 // Meal selection
 document.querySelectorAll('.meal-item').forEach(item => {
     item.addEventListener('click', function() {
@@ -260,6 +314,10 @@ document.getElementById('new-order-btn').addEventListener('click', function() {
         return;
     }
     
+    // Get selected quantity
+    const quantityInput = document.querySelector(`.quantity-input[data-meal-id="${selectedMealId}"]`);
+    const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+    
     fetch('{% url "restaurants:pos_create_order" %}', {
         method: 'POST',
         headers: {
@@ -272,7 +330,7 @@ document.getElementById('new-order-btn').addEventListener('click', function() {
     .then(data => {
         if (data.success) {
             // Add item to the new order
-            addItemToOrder(data.order_id, selectedMealId);
+            addItemToOrder(data.order_id, selectedMealId, quantity);
         } else {
             alert('Error creating order: ' + data.error);
         }
@@ -280,6 +338,37 @@ document.getElementById('new-order-btn').addEventListener('click', function() {
     .catch(error => {
         console.error('Error:', error);
         alert('Failed to create order');
+    });
+});
+
+// Cart item quantity controls
+document.querySelectorAll('.item-quantity-minus').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        const currentQuantity = parseInt(this.dataset.quantity);
+        if (currentQuantity > 1) {
+            updateItemQuantity(itemId, currentQuantity - 1);
+        }
+    });
+});
+
+document.querySelectorAll('.item-quantity-plus').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        const currentQuantity = parseInt(this.dataset.quantity);
+        if (currentQuantity < 99) {
+            updateItemQuantity(itemId, currentQuantity + 1);
+        }
+    });
+});
+
+document.querySelectorAll('.item-remove').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const itemId = this.dataset.itemId;
+        removeItem(itemId);
     });
 });
 
@@ -308,6 +397,61 @@ function addItemToOrder(orderId, mealId, quantity = 1) {
         console.error('Error:', error);
         alert('Failed to add item');
     });
+}
+
+// Update item quantity in cart
+function updateItemQuantity(itemId, newQuantity) {
+    fetch('{% url "restaurants:pos_update_item_quantity" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            quantity: newQuantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to show updated order
+        } else {
+            alert('Error updating quantity: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update quantity');
+    });
+}
+
+// Remove item from cart
+function removeItem(itemId) {
+    if (confirm('Are you sure you want to remove this item?')) {
+        fetch('{% url "restaurants:pos_remove_item" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                item_id: itemId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Refresh to show updated order
+            } else {
+                alert('Error removing item: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to remove item');
+        });
+    }
 }
 
 function showPaymentModal(orderId, totalAmount) {
