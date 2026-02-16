@@ -276,8 +276,8 @@ class POSReportsView(LoginRequiredMixin, TemplateView):
         # Get date range (default to today)
         from datetime import date, timedelta
         today = date.today()
-        start_date = request.GET.get('start_date', today)
-        end_date = request.GET.get('end_date', today)
+        start_date = self.request.GET.get('start_date', today)
+        end_date = self.request.GET.get('end_date', today)
         
         # Get orders for date range
         orders = POSOrder.objects.filter(
