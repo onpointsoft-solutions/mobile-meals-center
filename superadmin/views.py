@@ -553,8 +553,15 @@ class POSSessionsView(SuperAdminRequiredMixin, ListView):
         # Statistics
         context['total_sessions'] = POSSession.objects.count()
         context['active_sessions'] = POSSession.objects.filter(is_active=True).count()
-        context['total_sales'] = POSSession.objects.aggregate(
-            total=Sum('total_sales')
-        )['total'] or Decimal('0.00')
+        total_sales = POSSession.objects.aggregate(
+            cash_total=Sum('cash_sales'),
+            card_total=Sum('card_sales'),
+            mpesa_total=Sum('mpesa_sales')
+        )
+        context['total_sales'] = (
+            (total_sales['cash_total'] or Decimal('0.00')) +
+            (total_sales['card_total'] or Decimal('0.00')) +
+            (total_sales['mpesa_total'] or Decimal('0.00'))
+        )
         
         return context
