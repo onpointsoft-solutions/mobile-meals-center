@@ -410,3 +410,35 @@ class POSReceiptView(LoginRequiredMixin, DetailView):
             return None
         
         return receipt
+
+
+classPOSEmailReceiptView(LoginRequiredMixin, View):
+    
+    def post(self, request, pk):
+        receipt = get_object_or_404(POSReceipt, pk=pk)
+        
+        # Check if receipt belongs to user's restaurant
+        if receipt.order.restaurant.owner != request.user:
+            return JsonResponse({'error': 'Access denied'}, status=403)
+        
+        if not receipt.customer_email:
+            return JsonResponse({'error': 'No customer email address provided'}, status=400)
+        
+        try:
+            from core.email_utils import send_pos_receipt_email
+            
+            # Send email receipt
+            send_pos_receipt_email(receipt)
+            
+            # Mark receipt as sent
+            receipt.emailed_at = timezone.now()
+            receipt.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Receipt sent to {receipt.customer_email}'
+            })
+            
+        except Exception as e:
+            logger.error(f"Error sending POS receipt email: {str(e)}")
+            return JsonResponse({'error': 'Failed to send email'}, status=500)

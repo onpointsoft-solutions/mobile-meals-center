@@ -167,3 +167,76 @@ Mobile Meals Center
     except Exception as e:
         logger.error(f"Failed to send order status update email for order {order.order_number}: {str(e)}")
         return False
+
+
+def send_pos_receipt_email(receipt):
+    """Send POS receipt email to customer"""
+    try:
+        subject = f"Receipt - {receipt.order.restaurant.name} - Order #{receipt.order.order_number}"
+        
+        # Render HTML email
+        html_content = render_to_string('emails/pos_receipt.html', {
+            'receipt': receipt,
+            'order': receipt.order,
+            'restaurant': receipt.order.restaurant,
+        })
+        
+        # Render text email
+        text_content = f"""
+Thank you for your order at {receipt.order.restaurant.name}!
+
+RECEIPT DETAILS
+----------------
+Receipt Number: {receipt.receipt_number}
+Order Number: {receipt.order.order_number}
+Date: {receipt.order.created_at.strftime('%B %d, %Y %I:%M %p')}
+
+ORDER ITEMS
+-----------
+"""
+        
+        for item in receipt.order.items.all():
+            text_content += f"{item.quantity}x {item.meal.name} - KES {item.total_price}\n"
+            if item.notes:
+                text_content += f"  Note: {item.notes}\n"
+        
+        tax_amount = receipt.order.total_amount * Decimal('0.08')
+        total_with_tax = receipt.order.total_amount + tax_amount
+        grand_total = total_with_tax + Decimal('50.00')
+        
+        text_content += f"""
+TOTAL BREAKDOWN
+---------------
+Subtotal: KES {receipt.order.total_amount}
+Tax (8%): KES {tax_amount}
+Delivery Fee: KES 50.00
+-----------------
+TOTAL: KES {grand_total}
+
+Payment Method: {receipt.order.get_payment_method_display()}
+Paid at: {receipt.order.completed_at.strftime('%I:%M %p') if receipt.order.completed_at else 'N/A'}
+
+Customer: {receipt.customer_name or 'Guest'}
+
+---
+Thank you for choosing {receipt.order.restaurant.name}!
+{receipt.order.restaurant.address}
+{receipt.order.restaurant.phone}
+"""
+        
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=text_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[receipt.customer_email],
+        )
+        
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+        
+        logger.info(f"POS receipt email sent to {receipt.customer_email} for receipt {receipt.receipt_number}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send POS receipt email for receipt {receipt.receipt_number}: {str(e)}")
+        return False

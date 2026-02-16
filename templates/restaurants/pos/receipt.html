@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load pos_filters %}
 
 {% block title %}Receipt {{ receipt.receipt_number }}{% endblock %}
 
@@ -50,13 +51,16 @@
                 
                 <!-- Totals -->
                 <div class="mb-3">
+                    {% with tax_amount=receipt.order.total_amount|mul:0.08 %}
+                    {% with total_with_tax=receipt.order.total_amount|add:tax_amount %}
+                    {% with grand_total=total_with_tax|add:50 %}
                     <div class="d-flex justify-content-between mb-1">
                         <span>Subtotal:</span>
                         <span>KES {{ receipt.order.total_amount|floatformat:2 }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                         <span>Tax (8%):</span>
-                        <span>KES {{ receipt.order.total_amount|mul:0.08|floatformat:2 }}</span>
+                        <span>KES {{ tax_amount|floatformat:2 }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                         <span>Delivery:</span>
@@ -65,8 +69,11 @@
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <span>TOTAL:</span>
-                        <span>KES {{ receipt.order.total_amount|add:receipt.order.total_amount|mul:0.08|add:50|floatformat:2 }}</span>
+                        <span>KES {{ grand_total|floatformat:2 }}</span>
                     </div>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endwith %}
                 </div>
                 
                 <!-- Payment Info -->
@@ -131,7 +138,7 @@ function printReceipt() {
     printWindow.document.write(`
         <html>
             <head>
-                <title>Receipt {{ receipt.receipt_number }}</title>
+                <title>Receipt {{ receipt.receipt_number|safe }}</title>
                 <style>
                     body { font-family: monospace; margin: 20px; }
                     .text-center { text-align: center; }
@@ -158,18 +165,22 @@ function printReceipt() {
 
 function emailReceipt() {
     {% if receipt.customer_email %}
-    fetch('{% url "restaurants:pos_email_receipt" receipt.id %}', {
+    const receiptId = '{{ receipt.id }}';
+    const customerEmail = '{{ receipt.customer_email }}';
+    const csrfToken = '{{ csrf_token }}';
+    
+    fetch('/restaurants/pos/email-receipt/' + receiptId + '/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
+            'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({})
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Receipt emailed successfully to {{ receipt.customer_email }}');
+            alert('Receipt emailed successfully to ' + customerEmail);
         } else {
             alert('Error sending email: ' + data.error);
         }

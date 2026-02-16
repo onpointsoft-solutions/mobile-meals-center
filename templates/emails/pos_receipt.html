@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - {{ restaurant.name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .receipt-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .receipt-header {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .receipt-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .receipt-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .receipt-body {
+            padding: 30px;
+        }
+        .receipt-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .receipt-info h3 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .order-items {
+            margin-bottom: 30px;
+        }
+        .order-items h3 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .item-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .item-notes {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .item-price {
+            font-weight: 600;
+            color: #ff6b35;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .total-row.grand-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff6b35;
+            border-top: 2px solid #ff6b35;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .payment-info {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .payment-info h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .receipt-footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+        }
+        .receipt-footer h3 {
+            color: #ff6b35;
+            margin-bottom: 15px;
+        }
+        .restaurant-info {
+            margin-bottom: 20px;
+        }
+        .restaurant-info p {
+            margin-bottom: 5px;
+        }
+        .thank-you {
+            font-size: 1.2rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .receipt-container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <!-- Header -->
+        <div class="receipt-header">
+            <h1>{{ restaurant.name }}</h1>
+            <p>Point of Sale Receipt</p>
+        </div>
+        
+        <!-- Receipt Body -->
+        <div class="receipt-body">
+            <!-- Receipt Info -->
+            <div class="receipt-info">
+                <h3>Receipt Information</h3>
+                <div class="info-row">
+                    <span>Receipt Number:</span>
+                    <strong>{{ receipt.receipt_number }}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Order Number:</span>
+                    <strong>{{ order.order_number }}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Date:</span>
+                    <strong>{{ order.created_at|date:"F d, Y H:i" }}</strong>
+                </div>
+                {% if receipt.customer_name %}
+                <div class="info-row">
+                    <span>Customer:</span>
+                    <strong>{{ receipt.customer_name }}</strong>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Order Items -->
+            <div class="order-items">
+                <h3>Order Items</h3>
+                {% for item in order.items.all %}
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-name">{{ item.quantity }}x {{ item.meal.name }}</div>
+                        {% if item.notes %}
+                        <div class="item-notes">{{ item.notes }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="item-price">KES {{ item.total_price|floatformat:2 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Totals -->
+            <div class="total-section">
+                {% with tax_amount=order.total_amount|mul:0.08 %}
+                {% with total_with_tax=order.total_amount|add:tax_amount %}
+                {% with grand_total=total_with_tax|add:50 %}
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>KES {{ order.total_amount|floatformat:2 }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Tax (8%):</span>
+                    <span>KES {{ tax_amount|floatformat:2 }}</span>
+                </div>
+                <div class="total-row">
+                    <span>Delivery Fee:</span>
+                    <span>KES 50.00</span>
+                </div>
+                <div class="total-row grand-total">
+                    <span>TOTAL:</span>
+                    <span>KES {{ grand_total|floatformat:2 }}</span>
+                </div>
+                {% endwith %}
+                {% endwith %}
+                {% endwith %}
+            </div>
+            
+            <!-- Payment Info -->
+            <div class="payment-info">
+                <h3>Payment Information</h3>
+                <div class="info-row">
+                    <span>Payment Method:</span>
+                    <strong>{{ order.get_payment_method_display }}</strong>
+                </div>
+                {% if order.completed_at %}
+                <div class="info-row">
+                    <span>Paid at:</span>
+                    <strong>{{ order.completed_at|date:"H:i" }}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="receipt-footer">
+            <h3>Thank You!</h3>
+            <div class="thank-you">Thank you for your order at {{ restaurant.name }}!</div>
+            <div class="restaurant-info">
+                <p><strong>{{ restaurant.name }}</strong></p>
+                <p>{{ restaurant.address|linebreaks }}</p>
+                <p>{{ restaurant.phone }}</p>
+            </div>
+            <p style="color: #6c757d; font-size: 0.9rem;">Please come again!</p>
+        </div>
+    </div>
+</body>
+</html>
