@@ -174,11 +174,17 @@ def send_pos_receipt_email(receipt):
     try:
         subject = f"Receipt - {receipt.order.restaurant.name} - Order #{receipt.order.order_number}"
         
+        # Calculate tax amount
+        tax_amount = receipt.order.total_amount * Decimal('0.08')
+        total_with_tax = receipt.order.total_amount + tax_amount
+        
         # Render HTML email
         html_content = render_to_string('emails/pos_receipt.html', {
             'receipt': receipt,
             'order': receipt.order,
             'restaurant': receipt.order.restaurant,
+            'tax_amount': tax_amount,
+            'total_with_tax': total_with_tax,
         })
         
         # Render text email

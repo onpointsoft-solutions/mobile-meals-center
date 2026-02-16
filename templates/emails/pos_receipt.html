@@ -212,8 +212,6 @@
             
             <!-- Totals -->
             <div class="total-section">
-                {% with tax_amount=order.total_amount|mul:0.08 %}
-                {% with total_with_tax=order.total_amount|add:tax_amount %}
                 <div class="total-row">
                     <span>Subtotal:</span>
                     <span>KES {{ order.total_amount|floatformat:2 }}</span>
@@ -226,8 +224,6 @@
                     <span>TOTAL:</span>
                     <span>KES {{ total_with_tax|floatformat:2 }}</span>
                 </div>
-                {% endwith %}
-                {% endwith %}
             </div>
             
             <!-- Payment Info -->
