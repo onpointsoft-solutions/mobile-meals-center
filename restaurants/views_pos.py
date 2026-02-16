@@ -412,7 +412,7 @@ class POSReceiptView(LoginRequiredMixin, DetailView):
         return receipt
 
 
-classPOSEmailReceiptView(LoginRequiredMixin, View):
+class POSEmailReceiptView(LoginRequiredMixin, View):
     
     def post(self, request, pk):
         receipt = get_object_or_404(POSReceipt, pk=pk)
