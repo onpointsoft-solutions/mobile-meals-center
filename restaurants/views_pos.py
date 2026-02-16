@@ -301,13 +301,16 @@ class POSReportsView(LoginRequiredMixin, TemplateView):
         )
         
         # Top selling items
-        from django.db.models import ExpressionWrapper, DecimalField
         top_items = POSOrderItem.objects.filter(
             order__in=orders
         ).values('meal__name').annotate(
             quantity=Sum('quantity'),
-            revenue=Sum(ExpressionWrapper(F('quantity') * F('price'), output_field=DecimalField()))
+            total_price=Sum('price')
         ).order_by('-quantity')[:10]
+        
+        # Calculate revenue for each item
+        for item in top_items:
+            item['revenue'] = item['quantity'] * item['total_price']
         
         # Hourly sales
         hourly_sales = orders.extra({
