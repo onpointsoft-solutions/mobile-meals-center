@@ -149,25 +149,25 @@
                     <h6><i class="bi bi-lightning me-2"></i>Example Calculation</h6>
                     <div class="small">
                         <div class="mb-1">
-                            <strong>Order Amount:</strong> KES 1,000.00
+                            <strong>Order Amount:</strong> KES {{ example_order_amount|floatformat:2 }}
                         </div>
                         <div class="mb-1">
                             <strong>Delivery Fee:</strong> KES {{ delivery_fee|floatformat:2 }}
                         </div>
                         <div class="mb-1">
-                            <strong>Subtotal:</strong> KES {{ 1000|add:delivery_fee|floatformat:2 }}
+                            <strong>Subtotal:</strong> KES {{ example_subtotal|floatformat:2 }}
                         </div>
                         <div class="mb-1">
-                            <strong>Tax ({{ tax_rate|floatformat:2 }}%):</strong> KES {{ 1000|add:delivery_fee|mul:tax_rate|div:100|floatformat:2 }}
+                            <strong>Tax ({{ tax_rate|floatformat:2 }}%):</strong> KES {{ example_tax|floatformat:2 }}
                         </div>
                         <div class="mb-2">
-                            <strong>Total Customer Pays:</strong> KES {{ 1000|add:delivery_fee|add:1000|add:delivery_fee|mul:tax_rate|div:100|floatformat:2 }}
+                            <strong>Total Customer Pays:</strong> KES {{ example_total|floatformat:2 }}
                         </div>
                         <div class="mb-1">
-                            <strong>Restaurant Earnings:</strong> KES {{ 1000|mul:commission_rate|div:100|floatformat:2 }} commission
+                            <strong>Restaurant Earnings:</strong> KES {{ example_commission|floatformat:2 }} commission
                         </div>
                         <div>
-                            <strong>Net to Restaurant:</strong> KES {{ 1000|sub:1000|mul:commission_rate|div:100|floatformat:2 }}
+                            <strong>Net to Restaurant:</strong> KES {{ example_net_to_restaurant|floatformat:2 }}
                         </div>
                     </div>
                 </div>

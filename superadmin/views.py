@@ -576,10 +576,24 @@ class FinancialSettingsView(SuperAdminRequiredMixin, TemplateView):
         
         from core.utils import get_delivery_fee, get_commission_rate, get_tax_rate
         
+        # Calculate example values for display
+        example_order_amount = Decimal('1000.00')
+        example_subtotal = example_order_amount + get_delivery_fee()
+        example_tax = example_subtotal * (get_tax_rate() / Decimal('100'))
+        example_total = example_subtotal + example_tax
+        example_commission = example_order_amount * (get_commission_rate() / Decimal('100'))
+        example_net_to_restaurant = example_order_amount - example_commission
+        
         context.update({
             'delivery_fee': get_delivery_fee(),
             'commission_rate': get_commission_rate(),
             'tax_rate': get_tax_rate(),
+            'example_order_amount': example_order_amount,
+            'example_subtotal': example_subtotal,
+            'example_tax': example_tax,
+            'example_total': example_total,
+            'example_commission': example_commission,
+            'example_net_to_restaurant': example_net_to_restaurant,
         })
         
         return context
