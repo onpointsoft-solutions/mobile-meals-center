@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import RiderProfile, DeliveryAssignment, RiderWarning
+from .models import RiderProfile, DeliveryAssignment, RiderEarning
 
 
 @admin.register(RiderProfile)
@@ -146,7 +146,7 @@ class DeliveryAssignmentAdmin(admin.ModelAdmin):
         )
 
 
-@admin.register(RiderWarning)
+@admin.register(RiderEarning)
 class RiderWarningAdmin(admin.ModelAdmin):
     list_display = [
         'rider', 'warning_type', 'severity', 
