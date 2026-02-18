@@ -56,7 +56,7 @@
                                             <th>Order #</th>
                                             <th>Customer</th>
                                             <th>Order Amount</th>
-                                            <th>Commission (15%)</th>
+                                            <th>Commission ({{ commission_rate|floatformat:2 }}%)</th>
                                             <th>Your Earning</th>
                                             <th>Delivered</th>
                                         </tr>
@@ -86,7 +86,7 @@
                                 <div>
                                     <small class="text-muted">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        {{ unpaid_earnings|length }} orders • 15% commission deducted
+                                        {{ unpaid_earnings|length }} orders • {{ commission_rate|floatformat:2 }}% commission deducted
                                     </small>
                                 </div>
                                 
@@ -125,7 +125,7 @@
                         <div class="badge bg-primary me-3">2</div>
                         <div>
                             <h6 class="mb-1">Earnings Calculated</h6>
-                            <p class="small text-muted mb-0">15% commission deducted, remaining amount is your earning</p>
+                            <p class="small text-muted mb-0">{{ commission_rate|floatformat:2 }}% commission deducted, remaining amount is your earning</p>
                         </div>
                     </div>
                     
@@ -155,13 +155,13 @@
                     <div class="mb-2">
                         <div class="d-flex justify-content-between">
                             <span>Commission Rate:</span>
-                            <strong>15%</strong>
+                            <strong>{{ commission_rate|floatformat:2 }}%</strong>
                         </div>
                     </div>
                     <div class="mb-2">
                         <div class="d-flex justify-content-between">
                             <span>Your Earning:</span>
-                            <strong>85%</strong>
+                            <strong>{{ restaurant_earning_rate|floatformat:2 }}%</strong>
                         </div>
                     </div>
                     <hr>

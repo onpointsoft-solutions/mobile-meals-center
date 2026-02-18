@@ -120,11 +120,18 @@ class InitiatePayoutView(LoginRequiredMixin, TemplateView):
         # Calculate totals
         total_amount = sum(earning.restaurant_earning for earning in unpaid_earnings)
         
+        # Get commission rate from database
+        from core.utils import get_commission_rate
+        commission_rate = get_commission_rate()
+        restaurant_earning_rate = Decimal('100') - commission_rate
+        
         context.update({
             'restaurant': restaurant,
             'unpaid_earnings': unpaid_earnings,
             'total_amount': total_amount,
             'payment_profile': getattr(restaurant, 'payment_profile', None),
+            'commission_rate': commission_rate,
+            'restaurant_earning_rate': restaurant_earning_rate,
         })
         return context
     

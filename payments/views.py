@@ -199,10 +199,12 @@ class ProcessPaymentView(LoginRequiredMixin, TemplateView):
         
         order = get_object_or_404(Order, id=order_id, customer=self.request.user)
         
-        # Calculate totals
+        # Calculate totals using database settings
+        from core.utils import get_delivery_fee, get_tax_rate
+        
         subtotal = order.total_amount
-        delivery_fee = Decimal('50.00')
-        tax_rate = Decimal('0.08')
+        delivery_fee = get_delivery_fee()
+        tax_rate = get_tax_rate() / Decimal('100')  # Convert percentage to decimal
         tax_amount = (subtotal + delivery_fee) * tax_rate
         total_amount = subtotal + delivery_fee + tax_amount
         
