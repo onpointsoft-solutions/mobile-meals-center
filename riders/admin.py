@@ -1,10 +1,10 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin,User
+from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from .models import RiderProfile, DeliveryAssignment, RiderEarning
-
+from accounts.models import User
 
 @admin.register(RiderProfile)
 class RiderProfileAdmin(admin.ModelAdmin):
