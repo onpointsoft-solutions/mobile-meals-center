@@ -120,15 +120,53 @@ class PrintableOrderListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         try:
             restaurant = self.request.user.restaurant
             
-            # Get active orders (pending, confirmed, preparing, ready)
+            # Get active orders (pending, confirmed, preparing, ready) and ready for delivery
             active_orders = Order.objects.filter(
                 restaurant=restaurant,
                 status__in=['pending', 'confirmed', 'preparing', 'ready']
             ).select_related('customer').prefetch_related('items').order_by('created_at')
             
+            # Get ready for delivery orders (ready status)
+            ready_orders = Order.objects.filter(
+                restaurant=restaurant,
+                status='ready'
+            ).select_related('customer').prefetch_related('items').order_by('created_at')
+            
             context.update({
                 'restaurant': restaurant,
                 'active_orders': active_orders,
+                'ready_orders': ready_orders,
+                'print_date': timezone.now(),
+            })
+            
+        except Restaurant.DoesNotExist:
+            messages.error(self.request, 'Restaurant profile not found.')
+            
+        return context
+
+
+class PrintableReadyOrdersView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """Printable list of only ready orders for delivery"""
+    template_name = 'restaurants/printable_ready_orders.html'
+    
+    def test_func(self):
+        return self.request.user.is_restaurant
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        try:
+            restaurant = self.request.user.restaurant
+            
+            # Get only ready for delivery orders (ready status)
+            ready_orders = Order.objects.filter(
+                restaurant=restaurant,
+                status='ready'
+            ).select_related('customer').prefetch_related('items').order_by('created_at')
+            
+            context.update({
+                'restaurant': restaurant,
+                'ready_orders': ready_orders,
                 'print_date': timezone.now(),
             })
             

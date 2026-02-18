@@ -178,8 +178,11 @@
                         <i class="bi bi-clock-history me-2"></i>Recent Orders
                     </h5>
                     <div>
+                        <a href="{% url 'restaurants:print_ready_orders' %}" class="btn btn-success btn-sm me-2" target="_blank">
+                            <i class="bi bi-truck me-1"></i>Print Ready Orders
+                        </a>
                         <a href="{% url 'restaurants:print_orders' %}" class="btn btn-outline-secondary btn-sm me-2" target="_blank">
-                            <i class="bi bi-printer me-1"></i>Print Orders
+                            <i class="bi bi-printer me-1"></i>Print All Orders
                         </a>
                         <a href="{% url 'orders:list' %}" class="btn btn-outline-primary btn-sm">View All</a>
                     </div>

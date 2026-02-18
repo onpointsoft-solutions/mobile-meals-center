@@ -36,4 +36,7 @@ urlpatterns = [
     
     # Printable order list
     path('print-orders/', views.PrintableOrderListView.as_view(), name='print_orders'),
+    
+    # Printable ready orders only
+    path('print-ready-orders/', views.PrintableReadyOrdersView.as_view(), name='print_ready_orders'),
 ]

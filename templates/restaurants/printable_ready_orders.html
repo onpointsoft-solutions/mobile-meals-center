@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Active Orders - {{ restaurant.name }}</title>
+    <title>Ready Orders - {{ restaurant.name }}</title>
     <style>
         @media print {
             body { font-size: 12px; }
@@ -65,9 +65,6 @@
             text-transform: uppercase;
         }
         
-        .status-pending { background-color: #fff3cd; color: #856404; }
-        .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
-        .status-preparing { background-color: #cce5ff; color: #004085; }
         .status-ready { background-color: #d4edda; color: #155724; }
         
         .customer-info {
@@ -127,7 +124,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #007bff;
+            background: #28a745;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -137,7 +134,7 @@
         }
         
         .print-button:hover {
-            background: #0056b3;
+            background: #218838;
         }
         
         .no-orders {
@@ -145,16 +142,24 @@
             padding: 40px;
             color: #666;
         }
+        
+        .delivery-info {
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+        }
     </style>
 </head>
 <body>
     <button class="print-button no-print" onclick="window.print()">
-        🖨️ Print Orders
+        🖨️ Print Ready Orders
     </button>
     
     <div class="header">
         <h1>{{ restaurant.name }}</h1>
-        <p><strong>Orders Management List</strong></p>
+        <p><strong>Ready Orders for Delivery</strong></p>
         <p>Printed on: {{ print_date|date:"F d, Y H:i" }}</p>
         {% if restaurant.address %}
         <p>{{ restaurant.address }}</p>
@@ -164,80 +169,20 @@
         {% endif %}
     </div>
     
-    <!-- Active Orders Section -->
-    {% if active_orders %}
-    <div style="margin-bottom: 40px;">
-        <h2 style="border-bottom: 2px solid #007bff; padding-bottom: 10px; color: #007bff;">
-            🍳 Active Orders ({{ active_orders|length }})
-        </h2>
-        {% for order in active_orders %}
-        <div class="order-item">
-            <div class="order-header">
-                <div class="order-number">
-                    Order #{{ order.order_number }}
-                </div>
-                <div class="order-status status-{{ order.status }}">
-                    {{ order.get_status_display }}
-                </div>
-            </div>
-            
-            <div class="customer-info">
-                <p><strong>Customer:</strong> {{ order.customer.get_full_name|default:order.customer.username }}</p>
-                <p><strong>Phone:</strong> {{ order.customer.phone|default:"Not provided" }}</p>
-                {% if order.delivery_address %}
-                <p><strong>Address:</strong> {{ order.delivery_address }}</p>
-                {% endif %}
-                <p><strong>Order Time:</strong> {{ order.created_at|date:"H:i" }} ({{ order.created_at|timesince }} ago)</p>
-                {% if order.special_instructions %}
-                <p><strong>Special Instructions:</strong> {{ order.special_instructions }}</p>
-                {% endif %}
-            </div>
-            
-            <div class="order-items">
-                <h4>Order Items:</h4>
-                {% for item in order.items.all %}
-                <div class="item-row">
-                    <div class="item-name">{{ item.meal.name }}</div>
-                    <div class="item-quantity">×{{ item.quantity }}</div>
-                    <div class="item-price">KES {{ item.total_price|floatformat:2 }}</div>
-                </div>
-                {% if item.notes %}
-                <div class="item-row" style="font-style: italic; color: #666;">
-                    <div class="item-name" style="padding-left: 20px;">Note: {{ item.notes }}</div>
-                    <div class="item-quantity"></div>
-                    <div class="item-price"></div>
-                </div>
-                {% endif %}
-                {% endfor %}
-            </div>
-            
-            <div class="order-total">
-                Total: KES {{ order.total_amount|floatformat:2 }}
-            </div>
-        </div>
-        
-        {% if forloop.counter|divisibleby:3 and not forloop.last %}
-        <div class="page-break"></div>
-        {% endif %}
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <!-- Ready for Delivery Section -->
     {% if ready_orders %}
-    <div style="margin-bottom: 40px;">
-        <h2 style="border-bottom: 2px solid #28a745; padding-bottom: 10px; color: #28a745;">
-            🚚 Ready for Delivery ({{ ready_orders|length }})
-        </h2>
         {% for order in ready_orders %}
         <div class="order-item">
             <div class="order-header">
                 <div class="order-number">
                     Order #{{ order.order_number }}
                 </div>
-                <div class="order-status status-{{ order.status }}">
+                <div class="order-status status-ready">
                     {{ order.get_status_display }}
                 </div>
+            </div>
+            
+            <div class="delivery-info">
+                <p><strong>🚚 Ready for Delivery</strong></p>
             </div>
             
             <div class="customer-info">
@@ -279,30 +224,19 @@
         <div class="page-break"></div>
         {% endif %}
         {% endfor %}
-    </div>
-    {% endif %}
-    
-    <!-- No Orders Message -->
-    {% if not active_orders and not ready_orders %}
-    <div class="no-orders">
-        <h3>No Orders Available</h3>
-        <p>There are currently no active orders or orders ready for delivery.</p>
-    </div>
+    {% else %}
+        <div class="no-orders">
+            <h3>No Ready Orders</h3>
+            <p>There are currently no orders ready for delivery.</p>
+        </div>
     {% endif %}
     
     <div class="footer">
-        <p>This is a system-generated order list for {{ restaurant.name }}</p>
+        <p>This is a system-generated ready orders list for {{ restaurant.name }}</p>
         <p>Generated on {{ print_date|date:"F d, Y H:i:s" }}</p>
     </div>
     
     <script>
-        // Auto-print when page loads (optional)
-        // window.onload = function() {
-        //     setTimeout(function() {
-        //         window.print();
-        //     }, 500);
-        // };
-        
         // Add keyboard shortcut for printing
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'p') {
@@ -310,6 +244,13 @@
                 window.print();
             }
         });
+        
+        // Auto-print when page loads (optional)
+        // window.onload = function() {
+        //     setTimeout(function() {
+        //         window.print();
+        //     }, 500);
+        // };
     </script>
 </body>
 </html>
