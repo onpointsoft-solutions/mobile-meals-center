@@ -76,31 +76,13 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
                 }
             )
             
+            # Reject cash on delivery requests
             if payment_method_type == 'cash_on_delivery':
-                # Handle cash on delivery - confirm order immediately
-                payment.status = 'completed'
-                payment.payment_method = 'cash_on_delivery'
-                payment.amount = total_amount
-                payment.save()
-                
-                # Update order status to confirmed
-                order.status = 'confirmed'
-                order.save()
-                
-                # Send confirmation emails
-                try:
-                    send_order_confirmation_email(order, payment)
-                    send_restaurant_notification_email(order, payment)
-                except Exception as email_error:
-                    logger.error(f"Error sending emails: {str(email_error)}")
-                
                 return JsonResponse({
-                    'success': True,
-                    'payment_id': str(payment.id),
-                    'message': 'Order confirmed! Pay cash on delivery.'
-                })
+                    'error': 'Cash on delivery is currently not supported. Please use Paystack payment.'
+                }, status=400)
             
-            # Handle Paystack payment
+            # Handle Paystack payment only
             if payment_method_type == 'paystack':
                 # Check if Paystack keys are configured
                 if not settings.PAYSTACK_SECRET_KEY:

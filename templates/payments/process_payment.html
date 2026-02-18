@@ -248,27 +248,8 @@
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Payment method switching
-    const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+    // Show Paystack form by default (only payment method available)
     const paystackPaymentForm = document.getElementById('paystackPaymentForm');
-    const cashPaymentForm = document.getElementById('cashPaymentForm');
-    
-    paymentMethodRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Hide all forms first
-            paystackPaymentForm.style.display = 'none';
-            cashPaymentForm.style.display = 'none';
-            
-            // Show the selected form
-            if (this.value === 'paystack') {
-                paystackPaymentForm.style.display = 'block';
-            } else if (this.value === 'cash') {
-                cashPaymentForm.style.display = 'block';
-            }
-        });
-    });
-    
-    // Show Paystack form by default
     paystackPaymentForm.style.display = 'block';
     
     // Handle Paystack payment submission
@@ -323,55 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Handle Cash on Delivery submission
-    const cashSubmitButton = document.getElementById('submit-cash-payment');
-    
-    cashSubmitButton.addEventListener('click', async function(event) {
-        event.preventDefault();
-        
-        const cashButtonText = document.getElementById('cash-button-text');
-        const cashSpinner = document.getElementById('cash-spinner');
-        
-        // Disable submit button and show loading
-        cashSubmitButton.disabled = true;
-        cashButtonText.textContent = 'Confirming Order...';
-        cashSpinner.style.display = 'inline-block';
-        
-        try {
-            // Create order with cash payment method
-            const response = await fetch('{% url "payments:create_payment_intent" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    order_id: '{{ order.id }}',
-                    payment_method_type: 'cash_on_delivery'
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            // Order confirmed, redirect to success page
-            if (data.success) {
-                window.location.href = '/payments/payment-success/' + data.payment_id + '/';
-            }
-            
-        } catch (error) {
-            console.error('Cash payment error:', error);
-            alert('Order confirmation failed: ' + error.message);
-            
-            // Re-enable submit button
-            cashSubmitButton.disabled = false;
-            cashButtonText.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirm Order - Pay on Delivery';
-            cashSpinner.style.display = 'none';
-        }
-    });
+    // Cash on delivery functionality has been removed
 });
 </script>
 {% endblock %}
