@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.conf import settings
 from .models import RiderProfile, DeliveryAssignment, RiderEarning
-from accounts.models import User
 
 @admin.register(RiderProfile)
 class RiderProfileAdmin(admin.ModelAdmin):
@@ -13,7 +13,7 @@ class RiderProfileAdmin(admin.ModelAdmin):
         'rating', 'total_deliveries', 'is_online', 'created_at'
     ]
     list_filter = [
-        'approval_status', 'vehicle_type', 'is_online', 
+        'user__approval_status', 'vehicle_type', 'is_online', 
         'is_active', 'created_at'
     ]
     search_fields = [
@@ -71,7 +71,7 @@ class RiderProfileAdmin(admin.ModelAdmin):
         if obj.user:
             return format_html(
                 '<a href="{}">{}</a>',
-                reverse('admin:auth_user_change', args=[obj.user.id]),
+                reverse('admin:accounts_user_change', args=[obj.user.id]),
                 obj.user.get_full_name() or obj.user.username
             )
         return "-"
@@ -212,5 +212,6 @@ class CustomUserAdmin(UserAdmin):
 
 # Unregister default UserAdmin and register custom one
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
+User = settings.AUTH_USER_MODEL
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)

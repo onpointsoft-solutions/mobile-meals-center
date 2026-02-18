@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'orders',
     'core',
     'payments',
+    'riders',
     'superadmin',
 ]
 
@@ -106,6 +107,9 @@ DATABASES = {
 }
 
 
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.User'
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -151,9 +155,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
-
-# Custom User Model
-AUTH_USER_MODEL = 'accounts.User'
 
 # Login/Logout URLs
 LOGIN_URL = 'accounts:login'
