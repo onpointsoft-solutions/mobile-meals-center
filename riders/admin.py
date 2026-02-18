@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin,User
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
