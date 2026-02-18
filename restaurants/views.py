@@ -102,4 +102,36 @@ class RestaurantDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateV
             context['total_meals'] = restaurant.meals.count()
         except Restaurant.DoesNotExist:
             context['needs_restaurant_profile'] = True
+            
+        return context
+
+
+class PrintableOrderListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """Printable list of active orders for restaurant"""
+    template_name = 'restaurants/printable_orders.html'
+    
+    def test_func(self):
+        return self.request.user.is_restaurant
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        try:
+            restaurant = self.request.user.restaurant
+            
+            # Get active orders (pending, confirmed, preparing, ready)
+            active_orders = Order.objects.filter(
+                restaurant=restaurant,
+                status__in=['pending', 'confirmed', 'preparing', 'ready']
+            ).select_related('customer').prefetch_related('items').order_by('created_at')
+            
+            context.update({
+                'restaurant': restaurant,
+                'active_orders': active_orders,
+                'print_date': timezone.now(),
+            })
+            
+        except Restaurant.DoesNotExist:
+            messages.error(self.request, 'Restaurant profile not found.')
+            
         return context

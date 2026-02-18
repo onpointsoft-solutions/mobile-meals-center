@@ -54,10 +54,12 @@ class CreatePaymentIntentView(LoginRequiredMixin, View):
             
             order = get_object_or_404(Order, id=order_id, customer=request.user)
             
-            # Calculate total amount including tax and delivery fee
+            # Calculate total amount including tax and delivery fee using database settings
+            from core.utils import get_delivery_fee, get_tax_rate
+            
             subtotal = order.total_amount
-            delivery_fee = Decimal('50.00')
-            tax_rate = Decimal('0.08')
+            delivery_fee = get_delivery_fee()
+            tax_rate = get_tax_rate() / Decimal('100')  # Convert percentage to decimal
             total_amount = (subtotal + delivery_fee) * (1 + tax_rate)
             
             # Convert to kobo (Paystack uses kobo for NGN, but we'll use KES cents)

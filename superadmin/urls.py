@@ -42,4 +42,7 @@ urlpatterns = [
     path('pos/toggle/', views.POSToggleView.as_view(), name='pos_toggle'),
     path('pos/restaurants/', views.POSRestaurantsView.as_view(), name='pos_restaurants'),
     path('pos/sessions/', views.POSSessionsView.as_view(), name='pos_sessions'),
+    
+    # Financial Settings
+    path('financial-settings/', views.FinancialSettingsView.as_view(), name='financial_settings'),
 ]

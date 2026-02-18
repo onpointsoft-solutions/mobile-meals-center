@@ -1,0 +1,191 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Financial Settings - SuperAdmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-currency-dollar me-2"></i>Financial Settings
+        </h2>
+        <div>
+            <a href="{% url 'superadmin:dashboard' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear me-2"></i>Financial Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="delivery_fee" class="form-label">
+                                    <i class="bi bi-truck me-1"></i>Delivery Fee (KES)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">KES</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="delivery_fee" 
+                                           name="delivery_fee" 
+                                           value="{{ delivery_fee }}" 
+                                           step="0.01" 
+                                           min="0" 
+                                           required>
+                                </div>
+                                <div class="form-text">
+                                    Amount charged to customers for home delivery
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="commission_rate" class="form-label">
+                                    <i class="bi bi-percent me-1"></i>Commission Rate (%)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="commission_rate" 
+                                           name="commission_rate" 
+                                           value="{{ commission_rate }}" 
+                                           step="0.01" 
+                                           min="0" 
+                                           max="100" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text">
+                                    Percentage deducted from restaurant payouts
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="tax_rate" class="form-label">
+                                    <i class="bi bi-receipt me-1"></i>Tax Rate (%)
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="tax_rate" 
+                                           name="tax_rate" 
+                                           value="{{ tax_rate }}" 
+                                           step="0.01" 
+                                           min="0" 
+                                           max="100" 
+                                           required>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text">
+                                    Tax rate applied to customer orders
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>How These Settings Work</h6>
+                            <ul class="mb-0">
+                                <li><strong>Delivery Fee:</strong> Fixed amount added to online orders for delivery</li>
+                                <li><strong>Commission Rate:</strong> Percentage taken from restaurant earnings (e.g., 10% = KES 10 per KES 100)</li>
+                                <li><strong>Tax Rate:</strong> Tax applied to customer orders (e.g., 8% = KES 8 tax per KES 100)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calculator me-2"></i>Current Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Delivery Fee:</span>
+                            <span class="badge bg-primary fs-6">KES {{ delivery_fee|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Commission Rate:</span>
+                            <span class="badge bg-success fs-6">{{ commission_rate|floatformat:2 }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Tax Rate:</span>
+                            <span class="badge bg-warning fs-6">{{ tax_rate|floatformat:2 }}%</span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6><i class="bi bi-lightning me-2"></i>Example Calculation</h6>
+                    <div class="small">
+                        <div class="mb-1">
+                            <strong>Order Amount:</strong> KES 1,000.00
+                        </div>
+                        <div class="mb-1">
+                            <strong>Delivery Fee:</strong> KES {{ delivery_fee|floatformat:2 }}
+                        </div>
+                        <div class="mb-1">
+                            <strong>Subtotal:</strong> KES {{ 1000|add:delivery_fee|floatformat:2 }}
+                        </div>
+                        <div class="mb-1">
+                            <strong>Tax ({{ tax_rate|floatformat:2 }}%):</strong> KES {{ 1000|add:delivery_fee|mul:tax_rate|div:100|floatformat:2 }}
+                        </div>
+                        <div class="mb-2">
+                            <strong>Total Customer Pays:</strong> KES {{ 1000|add:delivery_fee|add:1000|add:delivery_fee|mul:tax_rate|div:100|floatformat:2 }}
+                        </div>
+                        <div class="mb-1">
+                            <strong>Restaurant Earnings:</strong> KES {{ 1000|mul:commission_rate|div:100|floatformat:2 }} commission
+                        </div>
+                        <div>
+                            <strong>Net to Restaurant:</strong> KES {{ 1000|sub:1000|mul:commission_rate|div:100|floatformat:2 }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-calculate example
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['delivery_fee', 'commission_rate', 'tax_rate'];
+    
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+            // You could add live calculation here if needed
+        });
+    });
+});
+</script>
+{% endblock %}

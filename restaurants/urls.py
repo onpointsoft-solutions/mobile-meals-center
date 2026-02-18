@@ -33,4 +33,7 @@ urlpatterns = [
     path('pos/close-session/', views_pos.POSCloseSessionView.as_view(), name='pos_close_session'),
     path('pos/receipt/<uuid:pk>/', views_pos.POSReceiptView.as_view(), name='pos_receipt'),
     path('pos/email-receipt/<uuid:pk>/', views_pos.POSEmailReceiptView.as_view(), name='pos_email_receipt'),
+    
+    # Printable order list
+    path('print-orders/', views.PrintableOrderListView.as_view(), name='print_orders'),
 ]

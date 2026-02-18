@@ -12,10 +12,12 @@ def send_order_confirmation_email(order, payment):
     Send order confirmation email to customer
     """
     try:
-        # Calculate totals for email
+        # Calculate totals for email using database settings
+        from core.utils import get_delivery_fee, get_tax_rate
+        
         subtotal = order.total_amount
-        delivery_fee = Decimal('50.00')
-        tax_rate = Decimal('0.08')
+        delivery_fee = get_delivery_fee()
+        tax_rate = get_tax_rate() / Decimal('100')  # Convert percentage to decimal
         tax_amount = (subtotal + delivery_fee) * tax_rate
         total_amount = subtotal + delivery_fee + tax_amount
         
@@ -60,10 +62,12 @@ def send_restaurant_notification_email(order, payment):
     try:
         restaurant = order.restaurant
         
-        # Calculate totals for email
+        # Calculate totals for email using database settings
+        from core.utils import get_delivery_fee, get_tax_rate
+        
         subtotal = order.total_amount
-        delivery_fee = Decimal('50.00')
-        tax_rate = Decimal('0.08')
+        delivery_fee = get_delivery_fee()
+        tax_rate = get_tax_rate() / Decimal('100')  # Convert percentage to decimal
         tax_amount = (subtotal + delivery_fee) * tax_rate
         total_amount = subtotal + delivery_fee + tax_amount
         
@@ -174,8 +178,10 @@ def send_pos_receipt_email(receipt):
     try:
         subject = f"Receipt - {receipt.order.restaurant.name} - Order #{receipt.order.order_number}"
         
-        # Calculate tax amount
-        tax_amount = receipt.order.total_amount * Decimal('0.08')
+        # Calculate tax amount using database settings
+        from core.utils import get_tax_rate
+        tax_rate = get_tax_rate() / Decimal('100')  # Convert percentage to decimal
+        tax_amount = receipt.order.total_amount * tax_rate
         total_with_tax = receipt.order.total_amount + tax_amount
         
         # Render HTML email

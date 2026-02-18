@@ -67,14 +67,14 @@
             <p class="text-muted">Explore meals by category</p>
         </div>
         
-        <div class="row g-4">
+        <div class="row g-3">
             {% for category in categories %}
-            <div class="col-md-4 col-lg-2">
+            <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-2">
                 <a href="{% url 'core:search' %}?category={{ category.id }}" class="text-decoration-none">
                     <div class="card h-100 text-center category-card">
-                        <div class="card-body">
-                            <i class="bi bi-cup-hot display-6 text-primary mb-3"></i>
-                            <h6 class="card-title">{{ category.name }}</h6>
+                        <div class="card-body p-2">
+                            <i class="bi bi-cup-hot fs-4 text-primary mb-2 d-block"></i>
+                            <h6 class="card-title small mb-0">{{ category.name }}</h6>
                         </div>
                     </div>
                 </a>

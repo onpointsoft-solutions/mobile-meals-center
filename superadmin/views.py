@@ -565,3 +565,89 @@ class POSSessionsView(SuperAdminRequiredMixin, ListView):
         )
         
         return context
+
+
+class FinancialSettingsView(SuperAdminRequiredMixin, TemplateView):
+    """Manage financial settings like delivery fee and commission"""
+    template_name = 'superadmin/financial_settings.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        from core.utils import get_delivery_fee, get_commission_rate, get_tax_rate
+        
+        context.update({
+            'delivery_fee': get_delivery_fee(),
+            'commission_rate': get_commission_rate(),
+            'tax_rate': get_tax_rate(),
+        })
+        
+        return context
+    
+    def post(self, request):
+        delivery_fee = request.POST.get('delivery_fee')
+        commission_rate = request.POST.get('commission_rate')
+        tax_rate = request.POST.get('tax_rate')
+        
+        # Validate inputs
+        try:
+            delivery_fee = float(delivery_fee)
+            commission_rate = float(commission_rate)
+            tax_rate = float(tax_rate)
+            
+            if delivery_fee < 0 or commission_rate < 0 or tax_rate < 0:
+                raise ValueError("Values must be positive")
+            
+            if commission_rate > 100 or tax_rate > 100:
+                raise ValueError("Rates cannot exceed 100%")
+                
+        except (ValueError, TypeError) as e:
+            messages.error(request, f'Invalid input: {str(e)}')
+            return redirect('superadmin:financial_settings')
+        
+        # Update settings
+        from superadmin.models import SystemSettings
+        from core.utils import clear_system_settings_cache
+        
+        settings_updated = []
+        
+        for key, value in [
+            ('delivery_fee', str(delivery_fee)),
+            ('commission_rate', str(commission_rate)),
+            ('tax_rate', str(tax_rate)),
+        ]:
+            setting, created = SystemSettings.objects.get_or_create(
+                key=key,
+                defaults={'value': value, 'description': self._get_setting_description(key)}
+            )
+            
+            if not created:
+                setting.value = value
+                setting.updated_by = request.user
+                setting.save()
+            
+            settings_updated.append(key)
+        
+        # Clear cache
+        clear_system_settings_cache()
+        
+        # Log activity
+        AdminActivityLog.objects.create(
+            admin=request.user,
+            action='update',
+            target_model='SystemSettings',
+            target_id=0,
+            description=f'Updated financial settings: {", ".join(settings_updated)}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        messages.success(request, 'Financial settings updated successfully!')
+        return redirect('superadmin:financial_settings')
+    
+    def _get_setting_description(self, key):
+        descriptions = {
+            'delivery_fee': 'Delivery fee charged to customers for online orders',
+            'commission_rate': 'Commission percentage charged to restaurants (percentage)',
+            'tax_rate': 'Tax rate applied to orders (percentage)',
+        }
+        return descriptions.get(key, '')

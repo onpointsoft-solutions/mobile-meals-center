@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Orders - {{ restaurant.name }}</title>
+    <style>
+        @media print {
+            body { font-size: 12px; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.4;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .order-item {
+            margin-bottom: 25px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .order-number {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .order-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-confirmed { background-color: #d1ecf1; color: #0c5460; }
+        .status-preparing { background-color: #cce5ff; color: #004085; }
+        .status-ready { background-color: #d4edda; color: #155724; }
+        
+        .customer-info {
+            margin-bottom: 10px;
+        }
+        
+        .customer-info strong {
+            display: inline-block;
+            min-width: 80px;
+        }
+        
+        .order-items {
+            margin: 15px 0;
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px dotted #eee;
+        }
+        
+        .item-name {
+            flex: 1;
+        }
+        
+        .item-quantity {
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        
+        .item-price {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .order-total {
+            text-align: right;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .print-button:hover {
+            background: #0056b3;
+        }
+        
+        .no-orders {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Print Orders
+    </button>
+    
+    <div class="header">
+        <h1>{{ restaurant.name }}</h1>
+        <p><strong>Active Orders List</strong></p>
+        <p>Printed on: {{ print_date|date:"F d, Y H:i" }}</p>
+        {% if restaurant.address %}
+        <p>{{ restaurant.address }}</p>
+        {% endif %}
+        {% if restaurant.phone %}
+        <p>Phone: {{ restaurant.phone }}</p>
+        {% endif %}
+    </div>
+    
+    {% if active_orders %}
+        {% for order in active_orders %}
+        <div class="order-item">
+            <div class="order-header">
+                <div class="order-number">
+                    Order #{{ order.order_number }}
+                </div>
+                <div class="order-status status-{{ order.status }}">
+                    {{ order.get_status_display }}
+                </div>
+            </div>
+            
+            <div class="customer-info">
+                <p><strong>Customer:</strong> {{ order.customer.get_full_name|default:order.customer.username }}</p>
+                <p><strong>Phone:</strong> {{ order.customer.phone|default:"Not provided" }}</p>
+                {% if order.delivery_address %}
+                <p><strong>Address:</strong> {{ order.delivery_address }}</p>
+                {% endif %}
+                <p><strong>Order Time:</strong> {{ order.created_at|date:"H:i" }} ({{ order.created_at|timesince }} ago)</p>
+                {% if order.special_instructions %}
+                <p><strong>Special Instructions:</strong> {{ order.special_instructions }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="order-items">
+                <h4>Order Items:</h4>
+                {% for item in order.items.all %}
+                <div class="item-row">
+                    <div class="item-name">{{ item.meal.name }}</div>
+                    <div class="item-quantity">×{{ item.quantity }}</div>
+                    <div class="item-price">KES {{ item.total_price|floatformat:2 }}</div>
+                </div>
+                {% if item.notes %}
+                <div class="item-row" style="font-style: italic; color: #666;">
+                    <div class="item-name" style="padding-left: 20px;">Note: {{ item.notes }}</div>
+                    <div class="item-quantity"></div>
+                    <div class="item-price"></div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="order-total">
+                Total: KES {{ order.total_amount|floatformat:2 }}
+            </div>
+        </div>
+        
+        {% if forloop.counter|divisibleby:3 and not forloop.last %}
+        <div class="page-break"></div>
+        {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="no-orders">
+            <h3>No Active Orders</h3>
+            <p>There are currently no active orders to display.</p>
+        </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>This is a system-generated order list for {{ restaurant.name }}</p>
+        <p>Generated on {{ print_date|date:"F d, Y H:i:s" }}</p>
+    </div>
+    
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() {
+        //     setTimeout(function() {
+        //         window.print();
+        //     }, 500);
+        // };
+        
+        // Add keyboard shortcut for printing
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+    </script>
+</body>
+</html>

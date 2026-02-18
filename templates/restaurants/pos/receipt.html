@@ -51,7 +51,9 @@
                 
                 <!-- Totals -->
                 <div class="mb-3">
-                    {% with tax_amount=receipt.order.total_amount|mul:0.08 %}
+                    {% load core %}
+                    {% with tax_rate=8|div:100 %}
+                    {% with tax_amount=receipt.order.total_amount|mul:tax_rate %}
                     {% with total_with_tax=receipt.order.total_amount|add:tax_amount %}
                     <div class="d-flex justify-content-between mb-1">
                         <span>Subtotal:</span>
@@ -66,6 +68,7 @@
                         <span>TOTAL:</span>
                         <span>KES {{ total_with_tax|floatformat:2 }}</span>
                     </div>
+                    {% endwith %}
                     {% endwith %}
                     {% endwith %}
                 </div>
