@@ -212,6 +212,7 @@ class CustomUserAdmin(UserAdmin):
 
 # Unregister default UserAdmin and register custom one
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
-User = settings.AUTH_USER_MODEL
+from django.contrib.auth import get_user_model
+User = get_user_model()
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)

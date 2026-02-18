@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.db.models.signals import pre_save
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -10,6 +10,8 @@ from django.utils import timezone
 from .models import RiderProfile, DeliveryAssignment
 from orders.models import Order
 
+
+User = get_user_model()
 
 @receiver(post_save, sender=User)
 def create_rider_profile(sender, instance, created, **kwargs):
