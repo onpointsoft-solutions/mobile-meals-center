@@ -17,6 +17,8 @@ from decimal import Decimal
 from orders.models import Order
 from .models import RiderProfile, DeliveryAssignment
 from core.utils import get_delivery_fee, get_commission_rate, get_tax_rate
+from django.contrib.auth import get_user_model
+User = get_user_model()
 import json
 
 
