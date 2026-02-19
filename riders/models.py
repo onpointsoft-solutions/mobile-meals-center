@@ -43,6 +43,8 @@ class RiderProfile(models.Model):
     )
     id_document = models.FileField(
         upload_to=get_upload_path,
+        blank=True,
+        null=True,
         help_text='Upload a clear photo of your ID document'
     )
     
@@ -63,6 +65,8 @@ class RiderProfile(models.Model):
     )
     vehicle_document = models.FileField(
         upload_to=get_upload_path,
+        blank=True,
+        null=True,
         help_text='Upload vehicle registration document'
     )
     

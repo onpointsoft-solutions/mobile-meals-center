@@ -541,22 +541,12 @@ def rider_register(request):
         print(f"DEBUG: Creating rider profile for user: {user.id}")
         # Note: Additional documents will be required during profile completion
         try:
-            from django.core.files.base import ContentFile
-            
-            # Create separate placeholder content for each file field
-            id_placeholder_content = b"ID document placeholder - will be updated during profile completion"
-            id_placeholder_file = ContentFile(id_placeholder_content, f"id_placeholder_{user.username}.txt")
-            
-            vehicle_placeholder_content = b"Vehicle document placeholder - will be updated during profile completion"
-            vehicle_placeholder_file = ContentFile(vehicle_placeholder_content, f"vehicle_placeholder_{user.username}.txt")
-            
+            # First create the profile without file fields to avoid upload path issues
             rider_profile = RiderProfile.objects.create(
                 user=user,
                 id_number="PENDING",  # Will be updated during profile completion
-                id_document=id_placeholder_file,  # Placeholder file
                 vehicle_type='motorcycle',  # Default vehicle type
                 vehicle_number="PENDING",  # Will be updated during profile completion
-                vehicle_document=vehicle_placeholder_file,  # Placeholder file
                 emergency_contact="0000000000",  # Will be updated during profile completion
                 bank_account="PENDING",  # Will be updated during profile completion
                 bank_name="PENDING",  # Will be updated during profile completion
