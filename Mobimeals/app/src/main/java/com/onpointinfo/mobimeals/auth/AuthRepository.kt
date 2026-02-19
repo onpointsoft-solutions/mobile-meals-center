@@ -4,6 +4,7 @@ import com.onpointinfo.mobimeals.network.RetrofitClient
 import com.onpointinfo.mobimeals.data.models.User
 import com.onpointinfo.mobimeals.network.LoginRequest
 import com.onpointinfo.mobimeals.network.LoginResponse
+import com.onpointinfo.mobimeals.network.RiderRegistrationRequest
 import retrofit2.Response
 import java.util.regex.Pattern
 
@@ -83,7 +84,7 @@ class AuthRepository private constructor() {
                 println("DEBUG: Registration response success: ${registrationResponse.success}")
                 
                 if (registrationResponse.success) {
-                    println("DEBUG: Registration successful - approval status: ${registrationResponse.user?.is_approved}")
+                    println("DEBUG: Registration successful - approval status: ${registrationResponse.user?.isApproved}")
                     Result.success(registrationResponse)
                 } else {
                     println("DEBUG: Registration failed: ${registrationResponse.message}")

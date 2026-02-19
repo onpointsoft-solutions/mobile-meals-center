@@ -525,16 +525,41 @@ def rider_register(request):
             approval_status='pending'
         )
         
-        # Create rider profile
-        rider_profile = RiderProfile.objects.create(
-            user=user,
-            is_approved=False,
-            is_active=False  # Inactive until approved
-        )
+        # Create rider profile with minimal required data
+        # Note: Additional documents will be required during profile completion
+        try:
+            # Create a temporary file for placeholder documents
+            import tempfile
+            import os
+            from django.core.files.base import ContentFile
+            
+            # Create placeholder content for file fields
+            placeholder_content = b"Placeholder document - will be updated during profile completion"
+            placeholder_file = ContentFile(placeholder_content, "placeholder.txt")
+            
+            rider_profile = RiderProfile.objects.create(
+                user=user,
+                id_number="PENDING",  # Will be updated during profile completion
+                id_document=placeholder_file,  # Placeholder file
+                vehicle_type='motorcycle',  # Default vehicle type
+                vehicle_number="PENDING",  # Will be updated during profile completion
+                vehicle_document=placeholder_file,  # Placeholder file
+                emergency_contact="0000000000",  # Will be updated during profile completion
+                bank_account="PENDING",  # Will be updated during profile completion
+                bank_name="PENDING",  # Will be updated during profile completion
+                delivery_areas=[],  # Empty list initially
+                is_active=False  # Inactive until profile is completed and approved
+            )
+        except Exception as e:
+            # If rider profile creation fails, delete the user and return error
+            user.delete()
+            return JsonResponse({
+                'error': f'Failed to create rider profile: {str(e)}'
+            }, status=500)
         
         return JsonResponse({
             'success': True,
-            'message': 'Registration successful! Your account is pending approval.',
+            'message': 'Registration successful! Please complete your profile with required documents to activate your account.',
             'user': {
                 'id': user.id,
                 'username': user.username,
@@ -545,7 +570,13 @@ def rider_register(request):
                 'userType': 'rider',
                 'is_approved': user.is_approved,
                 'approval_status': user.approval_status
-            }
+            },
+            'next_steps': [
+                'Complete your profile with personal information',
+                'Upload ID document and vehicle documents',
+                'Add bank account details for payments',
+                'Wait for admin approval'
+            ]
         }, status=201)
         
     except json.JSONDecodeError:

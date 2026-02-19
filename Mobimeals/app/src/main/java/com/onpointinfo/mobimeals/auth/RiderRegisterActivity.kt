@@ -80,22 +80,24 @@ class RiderRegisterActivity : AppCompatActivity() {
             progressBar.visibility = View.GONE
             
             result.onSuccess { loginResponse ->
-                Toast.makeText(
-                    this,
-                    loginResponse.message,
-                    Toast.LENGTH_LONG
-                ).show()
-                
-                // Navigate back to login
-                finish()
+                // Show success message with next steps
+                showRegistrationSuccessDialog(loginResponse)
             }
             
             result.onFailure { exception ->
-                Toast.makeText(
-                    this,
-                    "Registration failed: ${exception.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                // Show user-friendly error message
+                val errorMessage = exception.message?.let { message ->
+                    when {
+                        message.contains("Username already exists") -> "This username is already taken. Please choose another one."
+                        message.contains("Email already exists") -> "This email is already registered. Please use another email or try logging in."
+                        message.contains("Missing required fields") -> "Please fill in all required fields."
+                        message.contains("Failed to create rider profile") -> "Registration failed. Please try again later."
+                        message.contains("Invalid request data") -> "Invalid registration data. Please check your information and try again."
+                        else -> "Registration failed. Please try again later."
+                    }
+                } ?: "Registration failed. Please try again later."
+                
+                Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -185,5 +187,39 @@ class RiderRegisterActivity : AppCompatActivity() {
             lastName = lastName,
             phone = phone
         )
+    }
+    
+    private fun showRegistrationSuccessDialog(loginResponse: com.onpointinfo.mobimeals.network.LoginResponse) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Registration Successful! 🎉")
+            .setMessage(buildSuccessMessage(loginResponse))
+            .setPositiveButton("Got it!") { dialog, _ ->
+                dialog.dismiss()
+                finish() // Navigate back to login
+            }
+            .setCancelable(false)
+            .show()
+    }
+    
+    private fun buildSuccessMessage(loginResponse: com.onpointinfo.mobimeals.network.LoginResponse): String {
+        val baseMessage = loginResponse.message
+        
+        val nextSteps = """
+            |
+            |Your account has been created successfully! 📱
+            |
+            |Next Steps to Activate Your Account:
+            |
+            |✅ Complete your profile with personal information
+            |✅ Upload your ID document and vehicle documents  
+            |✅ Add your bank account details for payments
+            |✅ Wait for admin approval (usually within 24 hours)
+            |
+            |You'll receive an email once your account is approved.
+            |
+            |Thank you for joining MobileMeals! 🚴‍♂️🍕
+        """.trimMargin()
+        
+        return nextSteps
     }
 }

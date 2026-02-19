@@ -63,7 +63,16 @@ data class User(
     val email: String = "",
     
     @SerializedName("user_type")
-    val userType: String
+    val userType: String,
+    
+    @SerializedName("phone")
+    val phone: String = "",
+    
+    @SerializedName("is_approved")
+    val isApproved: Boolean = false,
+    
+    @SerializedName("approval_status")
+    val approvalStatus: String = ""
 )
 
 data class Location(
