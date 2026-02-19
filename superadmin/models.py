@@ -35,7 +35,7 @@ class AdminActivityLog(models.Model):
     admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='admin_actions')
     action = models.CharField(max_length=20, choices=ACTION_CHOICES)
     target_model = models.CharField(max_length=100)
-    target_id = models.IntegerField()
+    target_id = models.CharField(max_length=36)  # Can store both integers and UUIDs
     description = models.TextField()
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
