@@ -541,19 +541,24 @@ def rider_register(request):
         print(f"DEBUG: Creating rider profile for user: {user.id}")
         # Note: Additional documents will be required during profile completion
         try:
-            # First create the profile without file fields to avoid upload path issues
-            rider_profile = RiderProfile.objects.create(
-                user=user,
-                id_number="PENDING",  # Will be updated during profile completion
-                vehicle_type='motorcycle',  # Default vehicle type
-                vehicle_number="PENDING",  # Will be updated during profile completion
-                emergency_contact="0000000000",  # Will be updated during profile completion
-                bank_account="PENDING",  # Will be updated during profile completion
-                bank_name="PENDING",  # Will be updated during profile completion
-                delivery_areas=[],  # Empty list initially
-                is_active=False  # Inactive until profile is completed and approved
-            )
-            print(f"DEBUG: Rider profile created successfully with ID: {rider_profile.id}")
+            # Check if profile already exists for this user
+            if RiderProfile.objects.filter(user=user).exists():
+                print(f"DEBUG: Rider profile already exists for user: {user.id}")
+                rider_profile = RiderProfile.objects.get(user=user)
+            else:
+                # First create the profile without file fields to avoid upload path issues
+                rider_profile = RiderProfile.objects.create(
+                    user=user,
+                    id_number="PENDING",  # Will be updated during profile completion
+                    vehicle_type='motorcycle',  # Default vehicle type
+                    vehicle_number="PENDING",  # Will be updated during profile completion
+                    emergency_contact="0000000000",  # Will be updated during profile completion
+                    bank_account="PENDING",  # Will be updated during profile completion
+                    bank_name="PENDING",  # Will be updated during profile completion
+                    delivery_areas=[],  # Empty list initially
+                    is_active=False  # Inactive until profile is completed and approved
+                )
+            print(f"DEBUG: Rider profile created/retrieved successfully with ID: {rider_profile.id}")
         except Exception as e:
             print(f"DEBUG: Rider profile creation failed: {str(e)}")
             # If rider profile creation fails, delete the user and return error
