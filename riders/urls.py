@@ -6,6 +6,7 @@ app_name = 'riders'
 urlpatterns = [
     # Rider authentication
     path('login/', views.rider_login, name='rider_login'),
+    path('register/', views.rider_register, name='rider_register'),
     
     # Rider profile management
     path('profile/', views.get_rider_profile, name='get_rider_profile'),

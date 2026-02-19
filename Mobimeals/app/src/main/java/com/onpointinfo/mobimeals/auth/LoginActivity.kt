@@ -19,6 +19,7 @@ class LoginActivity : BaseActivity() {
     private lateinit var rbCustomer: RadioButton
     private lateinit var rbRider: RadioButton
     private lateinit var btnLogin: Button
+    private lateinit var tvRegisterRider: TextView
     private lateinit var progressBar: ProgressBar
     
     override fun isLoginRequired(): Boolean = false
@@ -32,6 +33,7 @@ class LoginActivity : BaseActivity() {
         rbCustomer = findViewById(R.id.rbCustomer)
         rbRider = findViewById(R.id.rbRider)
         btnLogin = findViewById(R.id.btnLogin)
+        tvRegisterRider = findViewById(R.id.tvRegisterRider)
         progressBar = findViewById(R.id.progressBar)
         
         loginViewModel = ViewModelProvider(this)[LoginViewModel::class.java]
@@ -67,6 +69,10 @@ class LoginActivity : BaseActivity() {
     override fun setupListeners() {
         btnLogin.setOnClickListener {
             performLogin()
+        }
+        
+        tvRegisterRider.setOnClickListener {
+            startActivity(Intent(this, RiderRegisterActivity::class.java))
         }
         
         rgUserType.setOnCheckedChangeListener { _, checkedId ->

@@ -54,6 +54,52 @@ class AuthRepository private constructor() {
         }
     }
     
+    suspend fun registerRider(
+        username: String,
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String,
+        phone: String = ""
+    ): Result<LoginResponse> {
+        return try {
+            println("DEBUG: Attempting rider registration for user: $username")
+            
+            // Create registration request
+            val registrationRequest = RiderRegistrationRequest(
+                username = username,
+                email = email,
+                password = password,
+                first_name = firstName,
+                last_name = lastName,
+                phone = phone
+            )
+            
+            val response = authApiService.register(registrationRequest)
+            println("DEBUG: Registration response code: ${response.code()}")
+            
+            if (response.isSuccessful && response.body() != null) {
+                val registrationResponse = response.body()!!
+                println("DEBUG: Registration response success: ${registrationResponse.success}")
+                
+                if (registrationResponse.success) {
+                    println("DEBUG: Registration successful - approval status: ${registrationResponse.user?.is_approved}")
+                    Result.success(registrationResponse)
+                } else {
+                    println("DEBUG: Registration failed: ${registrationResponse.message}")
+                    Result.failure(Exception(registrationResponse.message))
+                }
+            } else {
+                val errorMessage = response.errorBody()?.string() ?: "Registration failed with code ${response.code()}"
+                println("DEBUG: Registration failed - HTTP ${response.code()}: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            println("DEBUG: Registration exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+    
         
     suspend fun logout(): Result<Boolean> {
         return try {

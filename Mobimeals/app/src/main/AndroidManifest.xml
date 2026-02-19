@@ -45,6 +45,13 @@
             </intent-filter>
         </activity>
         
+        <!-- Authentication Activities -->
+        <activity
+            android:name=".auth.RiderRegisterActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Mobimeals.NoActionBar" />
+        
         <!-- Rider Activities -->
         <activity
             android:name=".rider.RiderDashboardActivity"

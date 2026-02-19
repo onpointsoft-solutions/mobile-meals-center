@@ -60,6 +60,9 @@ interface AuthApiService {
     @POST("/api/riders/login/")
     suspend fun login(@Body credentials: LoginRequest): Response<LoginResponse>
     
+    @POST("/api/riders/register/")
+    suspend fun register(@Body registration: RiderRegistrationRequest): Response<LoginResponse>
+    
     @POST("/accounts/logout/")
     suspend fun logout(): Response<ApiResponse>
     
@@ -73,6 +76,15 @@ interface AuthApiService {
 data class LoginRequest(
     val username: String,
     val password: String
+)
+
+data class RiderRegistrationRequest(
+    val username: String,
+    val email: String,
+    val password: String,
+    val first_name: String,
+    val last_name: String,
+    val phone: String = ""
 )
 
 data class LoginResponse(

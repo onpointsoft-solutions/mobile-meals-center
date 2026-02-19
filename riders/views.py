@@ -481,6 +481,85 @@ def get_delivery_history(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
+def rider_register(request):
+    """API endpoint for rider registration"""
+    try:
+        data = json.loads(request.body)
+        
+        # Extract registration data
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        first_name = data.get('first_name')
+        last_name = data.get('last_name')
+        phone = data.get('phone', '')
+        
+        # Validate required fields
+        if not all([username, email, password, first_name, last_name]):
+            return JsonResponse({
+                'error': 'Missing required fields: username, email, password, first_name, last_name'
+            }, status=400)
+        
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({
+                'error': 'Username already exists'
+            }, status=400)
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({
+                'error': 'Email already exists'
+            }, status=400)
+        
+        # Create new user with rider type
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            user_type='rider',
+            is_approved=False,  # Riders need approval
+            approval_status='pending'
+        )
+        
+        # Create rider profile
+        rider_profile = RiderProfile.objects.create(
+            user=user,
+            is_approved=False,
+            is_active=False  # Inactive until approved
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Registration successful! Your account is pending approval.',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'phone': user.phone,
+                'userType': 'rider',
+                'is_approved': user.is_approved,
+                'approval_status': user.approval_status
+            }
+        }, status=201)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'error': 'Invalid request data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
 def rider_login(request):
     """Custom login for riders with approval check"""
     try:
