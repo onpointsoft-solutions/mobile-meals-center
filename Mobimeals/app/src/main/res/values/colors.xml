@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base Colors -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Brand Colors -->
+    <color name="colorPrimary">#FF9800</color>
+    <color name="colorPrimaryDark">#F57C00</color>
+    <color name="colorAccent">#FFA726</color>
+
+    <!-- Text Colors -->
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
+    <color name="textOnPrimary">#FFFFFF</color>
+
+    <!-- Status Colors -->
+    <color name="statusPending">#FF9800</color>
+    <color name="statusConfirmed">#2196F3</color>
+    <color name="statusPreparing">#9C27B0</color>
+    <color name="statusReady">#4CAF50</color>
+    <color name="statusDelivered">#4CAF50</color>
+    <color name="statusCancelled">#F44336</color>
+
+    <!-- Rider Status -->
+    <color name="riderOnline">#4CAF50</color>
+    <color name="riderOffline">#757575</color>
+    <color name="riderBusy">#FF9800</color>
+
+    <!-- Background -->
+    <color name="colorBackground">#FFFFFF</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorSurfaceVariant">#F3F3F3</color>
+
+    <!-- UI Elements -->
+    <color name="divider">#E0E0E0</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="list_item_background">#FFFFFF</color>
+
+    <!-- Buttons -->
+    <color name="button_primary">#FF9800</color>
+    <color name="button_secondary">#424242</color>
+
+    <!-- Legacy Colors -->
+    <color name="orange_light">#FF9800</color>
+    <color name="colorError">#F44336</color>
+    <color name="colorSuccess">#4CAF50</color>
+    <color name="colorWarning">#FF9800</color>
+    <color name="colorInfo">#2196F3</color>
+
+</resources>

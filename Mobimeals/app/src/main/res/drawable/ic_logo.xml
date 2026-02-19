@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Background Circle -->
+    <path
+        android:fillColor="@color/colorPrimary"
+        android:pathData="M60,10 A50,50 0 1,1 10,60 A50,50 0 1,1 60,10 Z" />
+    
+    <!-- Delivery Box Icon -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M35,45 L85,45 L85,75 L35,75 Z" />
+    
+    <!-- Box Lid -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M30,45 L90,45 L85,35 L35,35 Z" />
+    
+    <!-- Handle -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M50,35 L70,35 L70,25 L50,25 Z" />
+    
+    <!-- Delivery Lines -->
+    <path
+        android:fillColor="@color/colorPrimary"
+        android:pathData="M45,55 L75,55 M45,65 L75,65" />
+    
+    <!-- MobileMeals Text -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M25,85 L95,85 L95,95 L25,95 Z" />
+    
+</vector>
