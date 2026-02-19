@@ -16,7 +16,7 @@ from restaurants.models import Restaurant
 from restaurants.models_pos import POSSession, POSOrder, POSOrderItem
 from meals.models import Meal, Category
 from orders.models import Order, OrderItem
-from riders.models import RiderProfile
+from riders.models import RiderProfile, DeliveryAssignment
 from .models import AdminActivityLog, SystemSettings, Complaint
 from .forms import SuperAdminLoginForm
 
