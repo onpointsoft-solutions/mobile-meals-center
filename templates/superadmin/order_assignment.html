@@ -1,0 +1,385 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Order Assignment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Order Assignment</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'superadmin:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Ready Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_ready_orders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Available Riders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_available_riders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bicycle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Assignments
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for assignment in recent_assignments %}
+                                    {% if assignment.status == 'assigned' or assignment.status == 'picked_up' or assignment.status == 'delivering' %}
+                                        {{ forloop.counter0 }}
+                                        {% if not forloop.last %}, {% endif %}
+                                    {% endif %}
+                                {% empty %}
+                                    0
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-truck fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Today's Assignments
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for assignment in recent_assignments %}
+                                    {% if assignment.assigned_at.date == today %}
+                                        {{ forloop.counter0 }}
+                                        {% if not forloop.last %}, {% endif %}
+                                    {% endif %}
+                                {% empty %}
+                                    0
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Ready Orders -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Ready Orders ({{ ready_orders.count }})</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshOrders()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if ready_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Restaurant</th>
+                                        <th>Amount</th>
+                                        <th>Delivery Address</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in ready_orders %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-weight-bold">{{ order.order_number }}</div>
+                                            <div class="small text-muted">{{ order.created_at|time:"g:i A" }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-weight-bold">{{ order.customer.get_full_name|default:order.customer.username }}</div>
+                                            <div class="small text-muted">{{ order.customer.email }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-weight-bold">{{ order.restaurant.name }}</div>
+                                            <div class="small text-muted">{{ order.restaurant.address|truncatechars:30 }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-weight-bold">KES {{ order.total_amount|floatformat:2 }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                {{ order.delivery_address|truncatechars:40 }}
+                                                <div class="text-muted">{{ order.phone }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" 
+                                                    onclick="showAssignModal('{{ order.id }}', '{{ order.order_number }}', '{{ order.total_amount }}')">
+                                                <i class="fas fa-user-plus"></i> Assign
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-check fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-600">No Ready Orders</h5>
+                            <p class="text-gray-500">All orders are either pending or assigned to riders.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Riders -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Available Riders ({{ available_riders.count }})</h6>
+                </div>
+                <div class="card-body">
+                    {% if available_riders %}
+                        {% for rider in available_riders %}
+                        <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                            <div class="mr-3">
+                                <div class="icon-circle bg-success">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="font-weight-bold">{{ rider.user.get_full_name|default:rider.user.username }}</div>
+                                <div class="small text-muted">
+                                    {{ rider.get_vehicle_type_display }} • {{ rider.vehicle_number|default:'No plate' }}
+                                </div>
+                                <div class="small">
+                                    <span class="badge bg-success">Online</span>
+                                    <span class="badge bg-info">{{ rider.rating|default:'0.0' }} ⭐</span>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="quickAssign('{{ rider.id }}', '{{ rider.user.get_full_name|default:rider.user.username }}')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-bicycle fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-600">No Available Riders</h5>
+                            <p class="text-gray-500">No riders are currently online and available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Assignments -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-info">Recent Assignments</h6>
+        </div>
+        <div class="card-body">
+            {% if recent_assignments %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Rider</th>
+                                <th>Status</th>
+                                <th>Assigned At</th>
+                                <th>Delivery Fee</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment in recent_assignments %}
+                            <tr>
+                                <td>
+                                    <div class="font-weight-bold">{{ assignment.order.order_number }}</div>
+                                    <div class="small text-muted">{{ assignment.order.customer.get_full_name|default:assignment.order.customer.username }}</div>
+                                </td>
+                                <td>
+                                    <div class="font-weight-bold">{{ assignment.rider.user.get_full_name|default:assignment.rider.user.username }}</div>
+                                    <div class="small text-muted">{{ assignment.rider.get_vehicle_type_display }}</div>
+                                </td>
+                                <td>
+                                    {% if assignment.status == 'assigned' %}
+                                        <span class="badge bg-primary">Assigned</span>
+                                    {% elif assignment.status == 'picked_up' %}
+                                        <span class="badge bg-info">Picked Up</span>
+                                    {% elif assignment.status == 'delivering' %}
+                                        <span class="badge bg-warning">Delivering</span>
+                                    {% elif assignment.status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% elif assignment.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ assignment.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small">{{ assignment.assigned_at|date:"M d, Y" }}</div>
+                                    <div class="text-muted">{{ assignment.assigned_at|time:"g:i A" }}</div>
+                                </td>
+                                <td>
+                                    <div class="font-weight-bold">KES {{ assignment.delivery_fee|floatformat:2 }}</div>
+                                </td>
+                                <td>
+                                    {% if assignment.status in ['assigned', 'picked_up', 'delivering'] %}
+                                        <form method="POST" action="{% url 'superadmin:cancel_assignment' assignment.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('Are you sure you want to cancel this assignment?')">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard fa-3x text-gray-300 mb-3"></i>
+                    <h5 class="text-gray-600">No Recent Assignments</h5>
+                    <p class="text-gray-500">No order assignments have been made yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Order to Rider</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" action="{% url 'superadmin:assign_order' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="modalOrderId" name="order_id">
+                    
+                    <div class="form-group">
+                        <label>Order Details</label>
+                        <div class="alert alert-info">
+                            <strong>Order #:</strong> <span id="modalOrderNumber"></span><br>
+                            <strong>Amount:</strong> KES <span id="modalOrderAmount"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="riderSelect">Select Rider</label>
+                        <select class="form-control" id="riderSelect" name="rider_id" required>
+                            <option value="">Choose a rider...</option>
+                            {% for rider in available_riders %}
+                            <option value="{{ rider.id }}">
+                                {{ rider.user.get_full_name|default:rider.user.username }} - {{ rider.get_vehicle_type_display }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deliveryFee">Delivery Fee (KES)</label>
+                        <input type="number" class="form-control" id="deliveryFee" name="delivery_fee" 
+                               value="0.00" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Assign Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAssignModal(orderId, orderNumber, orderAmount) {
+    document.getElementById('modalOrderId').value = orderId;
+    document.getElementById('modalOrderNumber').textContent = orderNumber;
+    document.getElementById('modalOrderAmount').textContent = orderAmount;
+    document.getElementById('deliveryFee').value = '0.00';
+    document.getElementById('riderSelect').value = '';
+    
+    $('#assignModal').modal('show');
+}
+
+function quickAssign(riderId, riderName) {
+    if (confirm('Assign next available order to ' + riderName + '?')) {
+        // Find the first ready order and assign it
+        var readyOrders = {{ ready_orders|length }};
+        if (readyOrders > 0) {
+            // This would need to be implemented with AJAX for true quick assign
+            alert('Quick assign feature coming soon! Please use the Assign button on individual orders.');
+        } else {
+            alert('No ready orders available for assignment.');
+        }
+    }
+}
+
+function refreshOrders() {
+    location.reload();
+}
+</script>
+{% endblock %}

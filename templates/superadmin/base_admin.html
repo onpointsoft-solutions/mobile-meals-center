@@ -202,6 +202,10 @@
                href="{% url 'superadmin:orders' %}">
                 <i class="bi bi-receipt"></i> Orders
             </a>
+            <a class="nav-link {% if 'assignment' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'superadmin:order_assignment' %}">
+                <i class="bi bi-truck"></i> Order Assignment
+            </a>
             <a class="nav-link {% if 'complaint' in request.resolver_match.url_name %}active{% endif %}" 
                href="{% url 'superadmin:complaints' %}">
                 <i class="bi bi-chat-left-text"></i> Complaints

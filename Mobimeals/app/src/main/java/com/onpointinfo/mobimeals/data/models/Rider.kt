@@ -62,7 +62,7 @@ data class User(
     @SerializedName("email")
     val email: String = "",
     
-    @SerializedName("user_type")
+    @SerializedName("userType")
     val userType: String,
     
     @SerializedName("phone")

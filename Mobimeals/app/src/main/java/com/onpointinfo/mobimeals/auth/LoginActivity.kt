@@ -14,7 +14,7 @@ import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.lifecycleScope
 import com.onpointinfo.mobimeals.MainActivity
 import com.onpointinfo.mobimeals.R
 import com.onpointinfo.mobimeals.base.BaseActivity
@@ -92,7 +92,7 @@ class LoginActivity : BaseActivity() {
             loginResponse?.let {
                 // Save session data using existing method
                 loginResponse.user?.let { user ->
-                    viewModelScope.launch {
+                    lifecycleScope.launch {
                         sessionManager.saveLoginSession(
                             user = com.onpointinfo.mobimeals.data.models.User(
                                 id = user.id,

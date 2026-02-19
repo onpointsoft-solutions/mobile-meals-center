@@ -52,4 +52,9 @@ urlpatterns = [
     path('riders/<uuid:pk>/approve/', views.ApproveRiderView.as_view(), name='approve_rider'),
     path('riders/<uuid:pk>/reject/', views.RejectRiderView.as_view(), name='reject_rider'),
     path('riders/<uuid:pk>/toggle-status/', views.ToggleRiderStatusView.as_view(), name='toggle_rider_status'),
+    
+    # Order Assignment
+    path('order-assignment/', views.OrderAssignmentView.as_view(), name='order_assignment'),
+    path('assign-order/', views.AssignOrderView.as_view(), name='assign_order'),
+    path('cancel-assignment/<uuid:assignment_id>/', views.CancelAssignmentView.as_view(), name='cancel_assignment'),
 ]

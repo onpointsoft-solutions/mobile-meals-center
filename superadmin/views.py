@@ -828,3 +828,136 @@ class ToggleRiderStatusView(SuperAdminRequiredMixin, View):
         
         messages.success(request, f'Rider {rider.user.get_full_name() or rider.user.username} has been {status_text}.')
         return redirect('superadmin:rider_detail', pk=rider.pk)
+
+
+# Order Assignment Views
+
+class OrderAssignmentView(SuperAdminRequiredMixin, TemplateView):
+    """View to assign ready orders to riders"""
+    template_name = 'superadmin/order_assignment.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get ready orders (not yet assigned or delivered)
+        ready_orders = Order.objects.filter(status='ready').exclude(
+            delivery_assignments__status__in=['assigned', 'picked_up', 'delivering']
+        ).select_related('customer', 'restaurant').order_by('-created_at')
+        
+        # Get available riders (approved and active)
+        available_riders = RiderProfile.objects.filter(
+            user__is_approved=True,
+            is_active=True,
+            is_online=True
+        ).select_related('user').order_by('user__username')
+        
+        # Get recent assignments
+        recent_assignments = DeliveryAssignment.objects.select_related(
+            'order', 'rider', 'rider__user'
+        ).order_by('-assigned_at')[:10]
+        
+        context['ready_orders'] = ready_orders
+        context['available_riders'] = available_riders
+        context['recent_assignments'] = recent_assignments
+        context['total_ready_orders'] = ready_orders.count()
+        context['total_available_riders'] = available_riders.count()
+        
+        return context
+
+
+class AssignOrderView(SuperAdminRequiredMixin, View):
+    """View to assign an order to a rider"""
+    
+    def post(self, request):
+        order_id = request.POST.get('order_id')
+        rider_id = request.POST.get('rider_id')
+        delivery_fee = request.POST.get('delivery_fee', '0.00')
+        
+        if not order_id or not rider_id:
+            messages.error(request, 'Order and rider are required.')
+            return redirect('superadmin:order_assignment')
+        
+        try:
+            order = Order.objects.get(id=order_id, status='ready')
+            rider = RiderProfile.objects.get(id=rider_id, user__is_approved=True, is_active=True)
+            
+            # Check if order is already assigned
+            if DeliveryAssignment.objects.filter(
+                order=order,
+                status__in=['assigned', 'picked_up', 'delivering']
+            ).exists():
+                messages.warning(request, 'This order is already assigned to a rider.')
+                return redirect('superadmin:order_assignment')
+            
+            # Create delivery assignment
+            assignment = DeliveryAssignment.objects.create(
+                order=order,
+                rider=rider,
+                delivery_fee=delivery_fee,
+                pickup_notes=f"Assigned by admin: {request.user.username}",
+                delivery_location={
+                    'address': order.delivery_address,
+                    'phone': order.phone
+                }
+            )
+            
+            # Update order status
+            order.status = 'assigned'
+            order.save()
+            
+            # Log activity
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='assign',
+                target_model='DeliveryAssignment',
+                target_id=str(assignment.id),
+                description=f'Assigned Order {order.order_number} to rider {rider.user.get_full_name() or rider.user.username}',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
+            messages.success(request, f'Order {order.order_number} successfully assigned to {rider.user.get_full_name() or rider.user.username}!')
+            
+        except Order.DoesNotExist:
+            messages.error(request, 'Order not found or not ready for assignment.')
+        except RiderProfile.DoesNotExist:
+            messages.error(request, 'Rider not found or not available.')
+        except Exception as e:
+            messages.error(request, f'Error assigning order: {str(e)}')
+        
+        return redirect('superadmin:order_assignment')
+
+
+class CancelAssignmentView(SuperAdminRequiredMixin, View):
+    """View to cancel an order assignment"""
+    
+    def post(self, request, assignment_id):
+        try:
+            assignment = DeliveryAssignment.objects.get(id=assignment_id)
+            order = assignment.order
+            
+            # Update assignment status
+            assignment.status = 'cancelled'
+            assignment.save()
+            
+            # Reset order status to ready
+            order.status = 'ready'
+            order.save()
+            
+            # Log activity
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='cancel',
+                target_model='DeliveryAssignment',
+                target_id=str(assignment.id),
+                description=f'Cancelled assignment for Order {order.order_number} (was assigned to {assignment.rider.user.get_full_name() or assignment.rider.user.username})',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
+            messages.success(request, f'Assignment for Order {order.order_number} has been cancelled.')
+            
+        except DeliveryAssignment.DoesNotExist:
+            messages.error(request, 'Assignment not found.')
+        except Exception as e:
+            messages.error(request, f'Error cancelling assignment: {str(e)}')
+        
+        return redirect('superadmin:order_assignment')
