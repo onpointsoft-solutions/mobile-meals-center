@@ -194,6 +194,10 @@
                href="{% url 'superadmin:users' %}">
                 <i class="bi bi-people"></i> Users
             </a>
+            <a class="nav-link {% if 'rider' in request.resolver_match.url_name %}active{% endif %}" 
+               href="{% url 'superadmin:riders' %}">
+                <i class="bi bi-bicycle"></i> Riders
+            </a>
             <a class="nav-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}" 
                href="{% url 'superadmin:orders' %}">
                 <i class="bi bi-receipt"></i> Orders

@@ -45,4 +45,11 @@ urlpatterns = [
     
     # Financial Settings
     path('financial-settings/', views.FinancialSettingsView.as_view(), name='financial_settings'),
+    
+    # Rider Management
+    path('riders/', views.RiderManagementView.as_view(), name='riders'),
+    path('riders/<int:pk>/', views.RiderDetailView.as_view(), name='rider_detail'),
+    path('riders/<int:pk>/approve/', views.ApproveRiderView.as_view(), name='approve_rider'),
+    path('riders/<int:pk>/reject/', views.RejectRiderView.as_view(), name='reject_rider'),
+    path('riders/<int:pk>/toggle-status/', views.ToggleRiderStatusView.as_view(), name='toggle_rider_status'),
 ]

@@ -1,0 +1,244 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}Rider Details - {{ rider.user.get_full_name|default:rider.user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Rider Details</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'superadmin:riders' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Riders
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Rider Information -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Rider Information</h6>
+                    <div>
+                        {% if rider.user.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif rider.user.approval_status == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% else %}
+                            <span class="badge bg-warning">Pending Approval</span>
+                        {% endif %}
+                        {% if rider.is_active %}
+                            <span class="badge bg-info">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-4">
+                            <div class="icon-circle bg-primary mx-auto" style="width: 100px; height: 100px; line-height: 100px;">
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h4 class="mb-3">{{ rider.user.get_full_name|default:rider.user.username }}</h4>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Username:</strong> @{{ rider.user.username }}</p>
+                                    <p><strong>Email:</strong> {{ rider.user.email }}</p>
+                                    <p><strong>Phone:</strong> {{ rider.user.phone|default:'Not provided' }}</p>
+                                    <p><strong>User Type:</strong> <span class="badge bg-info">{{ rider.user.user_type|title }}</span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Registration Date:</strong> {{ rider.created_at|date:"F d, Y" }}</p>
+                                    <p><strong>Last Active:</strong> {{ rider.last_active_at|default:'Never'|date:"F d, Y g:i A" }}</p>
+                                    <p><strong>Approval Status:</strong> 
+                                        {% if rider.user.is_approved %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif rider.user.approval_status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Account Status:</strong> 
+                                        {% if rider.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicle Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Vehicle Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Vehicle Type:</strong> {{ rider.get_vehicle_type_display }}</p>
+                            <p><strong>Vehicle Number:</strong> {{ rider.vehicle_number|default:'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>ID Number:</strong> {{ rider.id_number|default:'Not provided' }}</p>
+                            <p><strong>Emergency Contact:</strong> {{ rider.emergency_contact|default:'Not provided' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>Bank Account:</strong> {{ rider.bank_account|default:'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Bank Name:</strong> {{ rider.bank_name|default:'Not provided' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Statistics -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Delivery Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_deliveries }}</div>
+                                    <div class="text-xs font-weight-bold text-success text-uppercase">Total Deliveries</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_deliveries }}</div>
+                                    <div class="text-xs font-weight-bold text-info text-uppercase">Active Deliveries</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ rider.rating|default:'0.0' }}</div>
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase">Average Rating</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Actions</h6>
+                </div>
+                <div class="card-body">
+                    {% if not rider.user.is_approved and rider.user.approval_status != 'rejected' %}
+                        <form method="POST" action="{% url 'superadmin:approve_rider' rider.pk %}" class="mb-3">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100" 
+                                    onclick="return confirm('Are you sure you want to approve this rider? This will allow them to start delivering orders.')">
+                                <i class="fas fa-check-circle"></i> Approve Rider
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if rider.user.approval_status != 'rejected' %}
+                        <form method="POST" action="{% url 'superadmin:reject_rider' rider.pk %}" class="mb-3">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger w-100"
+                                    onclick="return confirm('Are you sure you want to reject this rider? This will prevent them from delivering orders.')">
+                                <i class="fas fa-times-circle"></i> Reject Rider
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'superadmin:toggle_rider_status' rider.pk %}" class="mb-3">
+                        {% csrf_token %}
+                        <button type="submit" class="btn {% if rider.is_active %}btn-warning{% else %}btn-secondary{% endif %} w-100">
+                            {% if rider.is_active %}
+                                <i class="fas fa-pause-circle"></i> Deactivate Rider
+                            {% else %}
+                                <i class="fas fa-play-circle"></i> Activate Rider
+                            {% endif %}
+                        </button>
+                    </form>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ rider.user.email }}" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope"></i> Send Email
+                        </a>
+                        {% if rider.user.phone %}
+                            <a href="tel:{{ rider.user.phone }}" class="btn btn-outline-success">
+                                <i class="fas fa-phone"></i> Call Rider
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Status Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Approval Status</label>
+                        <div class="alert alert-info">
+                            {% if rider.user.is_approved %}
+                                <i class="fas fa-check-circle"></i> This rider has been approved and can deliver orders.
+                            {% elif rider.user.approval_status == 'rejected' %}
+                                <i class="fas fa-times-circle"></i> This rider has been rejected and cannot deliver orders.
+                            {% else %}
+                                <i class="fas fa-clock"></i> This rider is pending approval and cannot deliver orders yet.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold">Account Status</label>
+                        <div class="alert alert-{{ 'success' if rider.is_active else 'warning' }}">
+                            {% if rider.is_active %}
+                                <i class="fas fa-play-circle"></i> This rider's account is active and can receive orders.
+                            {% else %}
+                                <i class="fas fa-pause-circle"></i> This rider's account is inactive and cannot receive orders.
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label font-weight-bold">Online Status</label>
+                        <div class="alert alert-{{ 'success' if rider.is_online else 'secondary' }}">
+                            {% if rider.is_online %}
+                                <i class="fas fa-circle text-success"></i> Currently online and available for deliveries.
+                            {% else %}
+                                <i class="fas fa-circle text-secondary"></i> Currently offline.
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

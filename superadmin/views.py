@@ -16,6 +16,7 @@ from restaurants.models import Restaurant
 from restaurants.models_pos import POSSession, POSOrder, POSOrderItem
 from meals.models import Meal, Category
 from orders.models import Order, OrderItem
+from riders.models import RiderProfile
 from .models import AdminActivityLog, SystemSettings, Complaint
 from .forms import SuperAdminLoginForm
 
@@ -44,6 +45,9 @@ class AdminDashboardView(SuperAdminRequiredMixin, TemplateView):
         # Overall statistics
         context['total_users'] = User.objects.count()
         context['total_customers'] = User.objects.filter(user_type='customer').count()
+        context['total_riders'] = User.objects.filter(user_type='rider').count()
+        context['pending_riders'] = User.objects.filter(user_type='rider', is_approved=False).count()
+        context['approved_riders'] = User.objects.filter(user_type='rider', is_approved=True).count()
         context['total_restaurants'] = Restaurant.objects.count()
         context['active_restaurants'] = Restaurant.objects.filter(is_active=True).count()
         context['total_meals'] = Meal.objects.count()
@@ -665,3 +669,162 @@ class FinancialSettingsView(SuperAdminRequiredMixin, TemplateView):
             'tax_rate': 'Tax rate applied to orders (percentage)',
         }
         return descriptions.get(key, '')
+
+
+# Rider Management Views
+
+class RiderManagementView(SuperAdminRequiredMixin, ListView):
+    """View to manage all riders"""
+    model = RiderProfile
+    template_name = 'superadmin/rider_management.html'
+    context_object_name = 'riders'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = RiderProfile.objects.select_related('user').order_by('-created_at')
+        
+        # Filter by approval status
+        status_filter = self.request.GET.get('status')
+        if status_filter:
+            if status_filter == 'pending':
+                queryset = queryset.filter(user__is_approved=False)
+            elif status_filter == 'approved':
+                queryset = queryset.filter(user__is_approved=True)
+            elif status_filter == 'rejected':
+                queryset = queryset.filter(user__approval_status='rejected')
+        
+        # Search by username or email
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(user__username__icontains=search_query) |
+                Q(user__email__icontains=search_query) |
+                Q(user__first_name__icontains=search_query) |
+                Q(user__last_name__icontains=search_query)
+            )
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_riders'] = RiderProfile.objects.count()
+        context['pending_riders'] = RiderProfile.objects.filter(user__is_approved=False).count()
+        context['approved_riders'] = RiderProfile.objects.filter(user__is_approved=True).count()
+        context['rejected_riders'] = RiderProfile.objects.filter(user__approval_status='rejected').count()
+        return context
+
+
+class RiderDetailView(SuperAdminRequiredMixin, DetailView):
+    """View to see rider details"""
+    model = RiderProfile
+    template_name = 'superadmin/rider_detail.html'
+    context_object_name = 'rider'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        rider = self.get_object()
+        
+        # Get rider's delivery statistics
+        from riders.models import DeliveryAssignment
+        context['total_deliveries'] = DeliveryAssignment.objects.filter(
+            rider=rider, status='delivered'
+        ).count()
+        context['active_deliveries'] = DeliveryAssignment.objects.filter(
+            rider=rider, status__in=['assigned', 'picked_up', 'delivering']
+        ).count()
+        
+        return context
+
+
+class ApproveRiderView(SuperAdminRequiredMixin, View):
+    """View to approve a rider"""
+    
+    def post(self, request, pk):
+        rider = get_object_or_404(RiderProfile, pk=pk)
+        user = rider.user
+        
+        if user.is_approved:
+            messages.warning(request, 'Rider is already approved.')
+        else:
+            # Approve the rider
+            user.is_approved = True
+            user.approval_status = 'approved'
+            user.save()
+            
+            # Activate the rider profile
+            rider.is_active = True
+            rider.save()
+            
+            # Log activity
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='approve',
+                target_model='RiderProfile',
+                target_id=rider.id,
+                description=f'Approved rider: {user.get_full_name() or user.username}',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
+            messages.success(request, f'Rider {user.get_full_name() or user.username} has been approved successfully!')
+        
+        return redirect('superadmin:rider_detail', pk=rider.pk)
+
+
+class RejectRiderView(SuperAdminRequiredMixin, View):
+    """View to reject a rider"""
+    
+    def post(self, request, pk):
+        rider = get_object_or_404(RiderProfile, pk=pk)
+        user = rider.user
+        
+        if user.approval_status == 'rejected':
+            messages.warning(request, 'Rider is already rejected.')
+        else:
+            # Reject the rider
+            user.is_approved = False
+            user.approval_status = 'rejected'
+            user.save()
+            
+            # Deactivate the rider profile
+            rider.is_active = False
+            rider.save()
+            
+            # Log activity
+            AdminActivityLog.objects.create(
+                admin=request.user,
+                action='reject',
+                target_model='RiderProfile',
+                target_id=rider.id,
+                description=f'Rejected rider: {user.get_full_name() or user.username}',
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+            
+            messages.success(request, f'Rider {user.get_full_name() or user.username} has been rejected.')
+        
+        return redirect('superadmin:rider_detail', pk=rider.pk)
+
+
+class ToggleRiderStatusView(SuperAdminRequiredMixin, View):
+    """View to toggle rider active status"""
+    
+    def post(self, request, pk):
+        rider = get_object_or_404(RiderProfile, pk=pk)
+        
+        # Toggle active status
+        rider.is_active = not rider.is_active
+        rider.save()
+        
+        status_text = "activated" if rider.is_active else "deactivated"
+        
+        # Log activity
+        AdminActivityLog.objects.create(
+            admin=request.user,
+            action='toggle_status',
+            target_model='RiderProfile',
+            target_id=rider.id,
+            description=f'{status_text.capitalize()} rider: {rider.user.get_full_name() or rider.user.username}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        messages.success(request, f'Rider {rider.user.get_full_name() or rider.user.username} has been {status_text}.')
+        return redirect('superadmin:rider_detail', pk=rider.pk)

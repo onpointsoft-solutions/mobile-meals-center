@@ -71,6 +71,69 @@
     </div>
 </div>
 
+<!-- Rider Statistics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="bi bi-bicycle"></i>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                    <h6 class="text-muted mb-1">Total Riders</h6>
+                    <h3 class="mb-0">{{ total_riders }}</h3>
+                    <small class="text-info"><i class="bi bi-people"></i> Registered riders</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                    <h6 class="text-muted mb-1">Pending Approval</h6>
+                    <h3 class="mb-0">{{ pending_riders }}</h3>
+                    <small class="text-warning"><i class="bi bi-exclamation-triangle"></i> Need approval</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                    <h6 class="text-muted mb-1">Approved Riders</h6>
+                    <h3 class="mb-0">{{ approved_riders }}</h3>
+                    <small class="text-success"><i class="bi bi-check"></i> Active riders</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card secondary">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon">
+                    <i class="bi bi-person-check"></i>
+                </div>
+                <div class="ms-3 flex-grow-1">
+                    <h6 class="text-muted mb-1">Total Customers</h6>
+                    <h3 class="mb-0">{{ total_customers }}</h3>
+                    <small class="text-secondary"><i class="bi bi-people"></i> Registered customers</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Order Status Overview -->
 <div class="row g-4 mb-4">
     <div class="col-md-6">
