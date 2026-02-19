@@ -276,7 +276,7 @@
                                     <div class="font-weight-bold">KES {{ assignment.delivery_fee|floatformat:2 }}</div>
                                 </td>
                                 <td>
-                                    {% if assignment.status in ['assigned', 'picked_up', 'delivering'] %}
+                                    {% if assignment.status == 'assigned' or assignment.status == 'picked_up' or assignment.status == 'delivering' %}
                                         <form method="POST" action="{% url 'superadmin:cancel_assignment' assignment.id %}" style="display: inline;">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-danger" 
