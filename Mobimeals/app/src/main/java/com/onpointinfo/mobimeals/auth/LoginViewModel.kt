@@ -14,6 +14,9 @@ class LoginViewModel : ViewModel() {
     private val _loginSuccess = MutableLiveData<Boolean>()
     val loginSuccess: LiveData<Boolean> = _loginSuccess
     
+    private val _loginResponse = MutableLiveData<LoginResponse>()
+    val loginResponse: LiveData<LoginResponse> = _loginResponse
+    
     private val _registrationResult = MutableLiveData<Result<LoginResponse>>()
     val registrationResult: LiveData<Result<LoginResponse>> = _registrationResult
     
@@ -23,7 +26,8 @@ class LoginViewModel : ViewModel() {
             
             result.fold(
                 onSuccess = { loginResponse ->
-                    // Session will be saved in the Activity
+                    // Set login response for session saving
+                    _loginResponse.value = loginResponse
                     _loginSuccess.value = true
                     showSuccess("Login successful!")
                 },

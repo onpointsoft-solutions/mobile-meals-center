@@ -217,7 +217,7 @@
 
                     <div class="mb-3">
                         <label class="form-label font-weight-bold">Account Status</label>
-                        <div class="alert alert-{{ 'success' if rider.is_active else 'warning' }}">
+                        <div class="alert alert-{% if rider.is_active %}success{% else %}warning{% endif %}">
                             {% if rider.is_active %}
                                 <i class="fas fa-play-circle"></i> This rider's account is active and can receive orders.
                             {% else %}
@@ -228,7 +228,7 @@
 
                     <div>
                         <label class="form-label font-weight-bold">Online Status</label>
-                        <div class="alert alert-{{ 'success' if rider.is_online else 'secondary' }}">
+                        <div class="alert alert-{% if rider.is_online %}success{% else %}secondary{% endif %}">
                             {% if rider.is_online %}
                                 <i class="fas fa-circle text-success"></i> Currently online and available for deliveries.
                             {% else %}

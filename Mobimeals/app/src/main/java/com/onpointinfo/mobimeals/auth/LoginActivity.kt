@@ -14,10 +14,12 @@ import android.widget.*
 import androidx.core.view.ViewCompat
 import androidx.core.view.ViewPropertyAnimatorCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.onpointinfo.mobimeals.MainActivity
 import com.onpointinfo.mobimeals.R
 import com.onpointinfo.mobimeals.base.BaseActivity
 import com.onpointinfo.mobimeals.rider.RiderDashboardActivity
+import kotlinx.coroutines.launch
 
 class LoginActivity : BaseActivity() {
     
@@ -86,12 +88,31 @@ class LoginActivity : BaseActivity() {
             }
         }
         
-        loginViewModel.loginSuccess.observe(this) { isSuccess ->
-            if (isSuccess) {
-                animateSuccess()
-                Handler(Looper.getMainLooper()).postDelayed({
-                    navigateToDashboard()
-                }, 1000)
+        loginViewModel.loginResponse.observe(this) { loginResponse ->
+            loginResponse?.let {
+                // Save session data using existing method
+                loginResponse.user?.let { user ->
+                    viewModelScope.launch {
+                        sessionManager.saveLoginSession(
+                            user = com.onpointinfo.mobimeals.data.models.User(
+                                id = user.id,
+                                username = user.username,
+                                firstName = user.firstName,
+                                lastName = user.lastName,
+                                email = user.email,
+                                userType = user.userType
+                            ),
+                            accessToken = loginResponse.access_token ?: "",
+                            refreshToken = loginResponse.refresh_token ?: ""
+                        )
+                        
+                        // Trigger login success animation and navigation
+                        animateSuccess()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            navigateToDashboard()
+                        }, 1000)
+                    }
+                }
             }
         }
     }
