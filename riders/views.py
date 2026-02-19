@@ -612,18 +612,37 @@ def rider_login(request):
         username = data.get('username')
         password = data.get('password')
         
+        print(f"DEBUG: Login attempt for username: {username}")
+        
         user = authenticate(username=username, password=password)
         
         if user is None:
+            print(f"DEBUG: Authentication failed for username: {username}")
+            # Check if user exists but password is wrong
+            try:
+                existing_user = User.objects.get(username=username)
+                print(f"DEBUG: User exists with ID: {existing_user.id}, user_type: {existing_user.user_type}")
+                print(f"DEBUG: User approval status: {existing_user.approval_status}, is_approved: {existing_user.is_approved}")
+            except User.DoesNotExist:
+                print(f"DEBUG: User does not exist: {username}")
+            
             return JsonResponse({
                 'error': 'Invalid username or password'
             }, status=401)
         
+        print(f"DEBUG: Authentication successful for user: {user.id}, username: {user.username}")
+        print(f"DEBUG: User type: {user.user_type}")
+        
         # Check if user is a rider
         try:
             rider_profile = user.rider_profile
+            print(f"DEBUG: Rider profile found: {rider_profile.id}")
+            print(f"DEBUG: Rider approval status: {rider_profile.approval_status}")
+            print(f"DEBUG: Rider is_approved: {rider_profile.is_approved}")
+            print(f"DEBUG: Rider is_active: {rider_profile.is_active}")
             
             if not rider_profile.is_approved:
+                print(f"DEBUG: Rider not approved, returning 403")
                 return JsonResponse({
                     'error': 'Your account is not approved yet',
                     'approval_status': rider_profile.approval_status,
@@ -631,6 +650,7 @@ def rider_login(request):
                 }, status=403)
             
             if not rider_profile.is_active:
+                print(f"DEBUG: Rider not active, returning 403")
                 return JsonResponse({
                     'error': 'Your account has been suspended',
                     'message': 'Please contact support'
@@ -656,8 +676,10 @@ def rider_login(request):
             })
             
         except RiderProfile.DoesNotExist:
+            print(f"DEBUG: User {user.username} is not a rider (no rider profile found)")
             return JsonResponse({
-                'error': 'This login is for riders only. Please select the correct user type.'
+                'error': 'User is not a rider',
+                'message': 'Please register as a rider first'
             }, status=403)
             
     except json.JSONDecodeError:
