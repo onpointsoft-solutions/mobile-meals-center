@@ -485,6 +485,14 @@ def rider_register(request):
     """API endpoint for rider registration"""
     try:
         data = json.loads(request.body)
+        print(f"DEBUG: Registration request data: {data}")
+    except Exception as e:
+        print(f"DEBUG: JSON parsing error: {str(e)}")
+        return JsonResponse({
+            'error': 'Invalid request data'
+        }, status=400)
+    
+    try:
         
         # Extract registration data
         username = data.get('username')
@@ -513,6 +521,7 @@ def rider_register(request):
             }, status=400)
         
         # Create new user with rider type
+        print(f"DEBUG: Creating user with username: {username}")
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -524,33 +533,37 @@ def rider_register(request):
             is_approved=False,  # Riders need approval
             approval_status='pending'
         )
+        print(f"DEBUG: User created successfully with ID: {user.id}")
         
         # Create rider profile with minimal required data
+        print(f"DEBUG: Creating rider profile for user: {user.id}")
         # Note: Additional documents will be required during profile completion
         try:
-            # Create a temporary file for placeholder documents
-            import tempfile
-            import os
             from django.core.files.base import ContentFile
             
-            # Create placeholder content for file fields
-            placeholder_content = b"Placeholder document - will be updated during profile completion"
-            placeholder_file = ContentFile(placeholder_content, "placeholder.txt")
+            # Create separate placeholder content for each file field
+            id_placeholder_content = b"ID document placeholder - will be updated during profile completion"
+            id_placeholder_file = ContentFile(id_placeholder_content, f"id_placeholder_{user.username}.txt")
+            
+            vehicle_placeholder_content = b"Vehicle document placeholder - will be updated during profile completion"
+            vehicle_placeholder_file = ContentFile(vehicle_placeholder_content, f"vehicle_placeholder_{user.username}.txt")
             
             rider_profile = RiderProfile.objects.create(
                 user=user,
                 id_number="PENDING",  # Will be updated during profile completion
-                id_document=placeholder_file,  # Placeholder file
+                id_document=id_placeholder_file,  # Placeholder file
                 vehicle_type='motorcycle',  # Default vehicle type
                 vehicle_number="PENDING",  # Will be updated during profile completion
-                vehicle_document=placeholder_file,  # Placeholder file
+                vehicle_document=vehicle_placeholder_file,  # Placeholder file
                 emergency_contact="0000000000",  # Will be updated during profile completion
                 bank_account="PENDING",  # Will be updated during profile completion
                 bank_name="PENDING",  # Will be updated during profile completion
                 delivery_areas=[],  # Empty list initially
                 is_active=False  # Inactive until profile is completed and approved
             )
+            print(f"DEBUG: Rider profile created successfully with ID: {rider_profile.id}")
         except Exception as e:
+            print(f"DEBUG: Rider profile creation failed: {str(e)}")
             # If rider profile creation fails, delete the user and return error
             user.delete()
             return JsonResponse({
@@ -579,13 +592,17 @@ def rider_register(request):
             ]
         }, status=201)
         
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"DEBUG: JSON decode error: {str(e)}")
         return JsonResponse({
             'error': 'Invalid request data'
         }, status=400)
     except Exception as e:
+        print(f"DEBUG: Unexpected error in rider registration: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
-            'error': str(e)
+            'error': 'Registration failed. Please try again later.'
         }, status=500)
 
 
