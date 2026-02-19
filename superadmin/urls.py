@@ -48,8 +48,8 @@ urlpatterns = [
     
     # Rider Management
     path('riders/', views.RiderManagementView.as_view(), name='riders'),
-    path('riders/<int:pk>/', views.RiderDetailView.as_view(), name='rider_detail'),
-    path('riders/<int:pk>/approve/', views.ApproveRiderView.as_view(), name='approve_rider'),
-    path('riders/<int:pk>/reject/', views.RejectRiderView.as_view(), name='reject_rider'),
-    path('riders/<int:pk>/toggle-status/', views.ToggleRiderStatusView.as_view(), name='toggle_rider_status'),
+    path('riders/<uuid:pk>/', views.RiderDetailView.as_view(), name='rider_detail'),
+    path('riders/<uuid:pk>/approve/', views.ApproveRiderView.as_view(), name='approve_rider'),
+    path('riders/<uuid:pk>/reject/', views.RejectRiderView.as_view(), name='reject_rider'),
+    path('riders/<uuid:pk>/toggle-status/', views.ToggleRiderStatusView.as_view(), name='toggle_rider_status'),
 ]
