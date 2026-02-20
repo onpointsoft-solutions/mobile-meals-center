@@ -846,7 +846,7 @@ class OrderAssignmentView(SuperAdminRequiredMixin, TemplateView):
         
         # Get available riders (approved and active)
         available_riders = RiderProfile.objects.filter(
-            user__is_approved=True,
+            is_approved=True,
             is_active=True,
             is_online=True
         ).select_related('user').order_by('user__username')
@@ -873,13 +873,21 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
         rider_id = request.POST.get('rider_id')
         delivery_fee = request.POST.get('delivery_fee', '0.00')
         
+        print(f"DEBUG: AssignOrderView - order_id: {order_id}, rider_id: {rider_id}, delivery_fee: {delivery_fee}")
+        
         if not order_id or not rider_id:
+            print("DEBUG: Missing order_id or rider_id")
             messages.error(request, 'Order and rider are required.')
             return redirect('superadmin:order_assignment')
         
         try:
+            print(f"DEBUG: Looking for order with id: {order_id}")
             order = Order.objects.get(id=order_id, status='ready')
+            print(f"DEBUG: Found order: {order.order_number}")
+            
+            print(f"DEBUG: Looking for rider with id: {rider_id}")
             rider = RiderProfile.objects.get(id=rider_id, is_approved=True, is_active=True)
+            print(f"DEBUG: Found rider: {rider.user.username}")
             
             # Check if order is already assigned
             if DeliveryAssignment.objects.filter(
@@ -890,6 +898,7 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
                 return redirect('superadmin:order_assignment')
             
             # Create delivery assignment
+            print(f"DEBUG: Creating delivery assignment for order {order.order_number} to rider {rider.user.username}")
             assignment = DeliveryAssignment.objects.create(
                 order=order,
                 rider=rider,
@@ -900,10 +909,13 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
                     'phone': order.phone
                 }
             )
+            print(f"DEBUG: Created assignment with id: {assignment.id}")
             
             # Update order status
+            print(f"DEBUG: Updating order status from 'ready' to 'assigned'")
             order.status = 'assigned'
             order.save()
+            print(f"DEBUG: Order status updated successfully")
             
             # Log activity
             AdminActivityLog.objects.create(
@@ -914,8 +926,10 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
                 description=f'Assigned Order {order.order_number} to rider {rider.user.get_full_name() or rider.user.username}',
                 ip_address=request.META.get('REMOTE_ADDR')
             )
+            print(f"DEBUG: Activity log created")
             
             messages.success(request, f'Order {order.order_number} successfully assigned to {rider.user.get_full_name() or rider.user.username}!')
+            print(f"DEBUG: Success message added")
             
         except Order.DoesNotExist:
             messages.error(request, 'Order not found or not ready for assignment.')

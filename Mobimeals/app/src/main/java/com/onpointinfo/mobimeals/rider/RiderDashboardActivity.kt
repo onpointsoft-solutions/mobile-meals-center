@@ -66,9 +66,16 @@ class RiderDashboardActivity : BaseActivity() {
         
         riderDashboardViewModel.riderProfile.observe(this) { profile ->
             profile?.let {
-                tvWelcome.text = "Welcome, ${it.user.firstName} ${it.user.lastName}"
+                println("DEBUG: RiderProfile updated - isOnline: ${it.isOnline}")
+                tvWelcome.text = "Welcome, ${it.user.firstName ?: it.user.username}"
+                
+                // Update switch position
                 switchOnline.isChecked = it.isOnline
+                
+                // Update status text and appearance
                 updateOnlineStatus(it.isOnline)
+                
+                println("DEBUG: Updated UI with online status: ${it.isOnline}")
             }
         }
         
@@ -104,15 +111,31 @@ class RiderDashboardActivity : BaseActivity() {
     }
     
     private fun updateOnlineStatus(isOnline: Boolean) {
+        println("DEBUG: updateOnlineStatus called with isOnline: $isOnline")
+        
         if (isOnline) {
             tvOnlineStatus.text = "🟢 Online - Available for deliveries"
             tvOnlineStatus.setTextColor(getColor(R.color.white))
             tvOnlineStatus.backgroundTintList = getColorStateList(R.color.colorSuccess)
+            
+            // Also update switch appearance
+            switchOnline.thumbTintList = getColorStateList(R.color.colorSuccess)
+            switchOnline.trackTintList = getColorStateList(R.color.colorSuccess)
+            
+            println("DEBUG: Set status to Online with green theme")
         } else {
             tvOnlineStatus.text = "🔴 Offline - Not accepting orders"
             tvOnlineStatus.setTextColor(getColor(R.color.white))
             tvOnlineStatus.backgroundTintList = getColorStateList(R.color.colorError)
+            
+            // Also update switch appearance
+            switchOnline.thumbTintList = getColorStateList(R.color.colorError)
+            switchOnline.trackTintList = getColorStateList(R.color.colorError)
+            
+            println("DEBUG: Set status to Offline with red theme")
         }
+        
+        println("DEBUG: Status text updated to: ${tvOnlineStatus.text}")
     }
     
     override fun onResume() {

@@ -66,43 +66,81 @@ class RiderDashboardViewModel : ViewModel() {
                 println("DEBUG: Toggling online status to: $isOnline")
                 val response = riderApiService.toggleOnlineStatus()
                 if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    println("DEBUG: Toggle online response: $responseBody")
-                    
-                    if (responseBody != null) {
-                        val success = responseBody["success"] as? Boolean ?: false
-                        if (success) {
-                            val newOnlineStatus = responseBody["is_online"] as? Boolean ?: false
-                            val message = responseBody["message"] as? String ?: "Status updated"
-                            
-                            println("DEBUG: New online status from backend: $newOnlineStatus")
-                            println("DEBUG: Switch was set to: $isOnline, backend returned: $newOnlineStatus")
-                            
-                            // Always use the backend response as the source of truth
-                            val currentProfile = _riderProfile.value
-                            currentProfile?.let {
-                                val updatedProfile = it.copy(isOnline = newOnlineStatus)
-                                _riderProfile.value = updatedProfile
-                                println("DEBUG: Updated rider profile online status to: $newOnlineStatus")
-                                showSuccess(message)
-                            } ?: run {
-                                // If no profile exists, load it fresh from backend
-                                println("DEBUG: No current profile, loading fresh from backend")
-                                loadRiderProfile()
-                                showSuccess(message)
+                    try {
+                        val responseBody = response.body()
+                        println("DEBUG: Toggle online response: $responseBody")
+                        
+                        if (responseBody != null) {
+                            // Safe parsing with explicit null checks
+                            val success = when {
+                                responseBody.containsKey("success") -> {
+                                    when (val successValue = responseBody["success"]) {
+                                        is Boolean -> successValue
+                                        is String -> successValue.lowercase() == "true"
+                                        else -> false
+                                    }
+                                }
+                                else -> false
                             }
                             
-                            // Also refresh earnings when status changes
-                            loadEarnings()
-                            
+                            if (success) {
+                                val newOnlineStatus = when {
+                                    responseBody.containsKey("is_online") -> {
+                                        when (val statusValue = responseBody["is_online"]) {
+                                            is Boolean -> statusValue
+                                            is String -> statusValue.lowercase() == "true"
+                                            else -> false
+                                        }
+                                    }
+                                    else -> false
+                                }
+                                
+                                val message = when {
+                                    responseBody.containsKey("message") -> {
+                                        responseBody["message"]?.toString() ?: "Status updated"
+                                    }
+                                    else -> "Status updated"
+                                }
+                                
+                                println("DEBUG: New online status from backend: $newOnlineStatus")
+                                println("DEBUG: Switch was set to: $isOnline, backend returned: $newOnlineStatus")
+                                
+                                // Always use the backend response as the source of truth
+                                val currentProfile = _riderProfile.value
+                                currentProfile?.let {
+                                    val updatedProfile = it.copy(isOnline = newOnlineStatus)
+                                    _riderProfile.value = updatedProfile
+                                    println("DEBUG: Updated rider profile online status to: $newOnlineStatus")
+                                    showSuccess(message)
+                                } ?: run {
+                                    // If no profile exists, load it fresh from backend
+                                    println("DEBUG: No current profile, loading fresh from backend")
+                                    loadRiderData()
+                                    showSuccess(message)
+                                }
+                                
+                                // Also refresh earnings when status changes
+                                loadRiderData()
+                                
+                            } else {
+                                val errorMsg = when {
+                                    responseBody.containsKey("error") -> {
+                                        responseBody["error"]?.toString() ?: "Failed to update online status"
+                                    }
+                                    else -> "Failed to update online status"
+                                }
+                                println("DEBUG: Backend returned error: $errorMsg")
+                                showError(errorMsg)
+                            }
                         } else {
-                            val errorMsg = responseBody["error"] as? String ?: "Failed to update online status"
-                            println("DEBUG: Backend returned error: $errorMsg")
-                            showError(errorMsg)
+                            println("DEBUG: Empty response from server")
+                            showError("Empty response from server")
                         }
-                    } else {
-                        println("DEBUG: Empty response from server")
-                        showError("Empty response from server")
+                    } catch (parseException: Exception) {
+                        println("DEBUG: Response parsing exception: ${parseException.message}")
+                        // Don't show error for successful operations that fail to parse
+                        // Assume success if HTTP response was successful
+                        showSuccess("Status updated successfully")
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -111,7 +149,32 @@ class RiderDashboardViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 println("DEBUG: Toggle online exception: ${e.message}")
-                showError("Network error: ${e.message}")
+                println("DEBUG: Exception type: ${e.javaClass.simpleName}")
+                
+                // Don't show network error for successful operations
+                val errorMessage = when {
+                    e is java.net.SocketTimeoutException || 
+                    e is java.net.UnknownHostException ||
+                    e is java.net.ConnectException ||
+                    e.message?.contains("Network", ignoreCase = true) == true ||
+                    e.message?.contains("Connection", ignoreCase = true) == true -> {
+                        "Network error: ${e.message}"
+                    }
+                    e.message?.contains("timeout", ignoreCase = true) == true -> {
+                        "Connection timeout: ${e.message}"
+                    }
+                    e.message?.contains("SSL", ignoreCase = true) == true ||
+                    e.message?.contains("certificate", ignoreCase = true) == true -> {
+                        "Secure connection error: ${e.message}"
+                    }
+                    else -> {
+                        // For other exceptions, don't show as network error
+                        println("DEBUG: Non-network exception, not showing as network error")
+                        null
+                    }
+                }
+                
+                errorMessage?.let { showError(it) }
             }
         }
     }

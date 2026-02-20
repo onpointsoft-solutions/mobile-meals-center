@@ -219,7 +219,7 @@ def get_available_orders(request):
                 },
                 'delivery_address': order.delivery_address,
                 'phone': order.phone,
-                'special_instructions': order.special_instructions or '',
+                'special_instructions': order.notes or '',
                 'total_amount': float(order.total_amount),
                 'delivery_fee': float(delivery_fee),
                 'created_at': order.created_at.isoformat(),
