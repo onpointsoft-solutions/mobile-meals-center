@@ -6,6 +6,7 @@ import android.widget.*
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.onpointinfo.mobimeals.R
 import com.onpointinfo.mobimeals.auth.LoginActivity
 import com.onpointinfo.mobimeals.base.BaseActivity
@@ -15,12 +16,12 @@ class RiderDashboardActivity : BaseActivity() {
     private lateinit var riderDashboardViewModel: RiderDashboardViewModel
     private lateinit var tvWelcome: TextView
     private lateinit var tvOnlineStatus: TextView
-    private lateinit var switchOnline: Switch
+    private lateinit var switchOnline: SwitchMaterial
     private lateinit var tvTodayEarnings: TextView
     private lateinit var tvTodayDeliveries: TextView
     private lateinit var tvRating: TextView
-    private lateinit var btnAvailableOrders: Button
-    private lateinit var btnDeliveryHistory: Button
+    private lateinit var btnAvailableOrders: LinearLayout
+    private lateinit var btnDeliveryHistory: LinearLayout
     private lateinit var btnProfile: Button
     private lateinit var btnLogout: Button
     private lateinit var progressBar: ProgressBar
@@ -105,10 +106,12 @@ class RiderDashboardActivity : BaseActivity() {
     private fun updateOnlineStatus(isOnline: Boolean) {
         if (isOnline) {
             tvOnlineStatus.text = "🟢 Online - Available for deliveries"
-            tvOnlineStatus.setTextColor(getColor(R.color.colorSuccess))
+            tvOnlineStatus.setTextColor(getColor(R.color.white))
+            tvOnlineStatus.backgroundTintList = getColorStateList(R.color.colorSuccess)
         } else {
             tvOnlineStatus.text = "🔴 Offline - Not accepting orders"
-            tvOnlineStatus.setTextColor(getColor(R.color.colorError))
+            tvOnlineStatus.setTextColor(getColor(R.color.white))
+            tvOnlineStatus.backgroundTintList = getColorStateList(R.color.colorError)
         }
     }
     

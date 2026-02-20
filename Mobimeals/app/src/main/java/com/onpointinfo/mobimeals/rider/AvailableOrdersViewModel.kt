@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.onpointinfo.mobimeals.data.models.Order
-import com.onpointinfo.mobimeals.network.RiderApiService
 import com.onpointinfo.mobimeals.network.RetrofitClient
 import kotlinx.coroutines.launch
 
@@ -30,12 +29,51 @@ class AvailableOrdersViewModel : ViewModel() {
             try {
                 val response = riderApiService.getAvailableOrders()
                 if (response.isSuccessful && response.body() != null) {
-                    _availableOrders.value = response.body()!!
+                    // Handle the response properly - it might be a list of orders or a different structure
+                    val responseBody = response.body()
+                    if (responseBody is List<*>) {
+                        // Convert to proper Order objects if possible
+                        val orders = responseBody.filterIsInstance<Order>()
+                        _availableOrders.value = orders
+                        
+                        if (orders.isEmpty()) {
+                            showSuccess("No orders available for delivery at the moment")
+                        }
+                    } else {
+                        _availableOrders.value = emptyList()
+                        showSuccess("No orders available for delivery at the moment")
+                    }
                 } else {
-                    showError("Failed to load available orders")
+                    // Handle specific HTTP errors
+                    val errorMessage = when (response.code()) {
+                        403 -> "You must be online to view available orders. Please toggle your online status."
+                        401 -> "Authentication required. Please login again."
+                        404 -> "No orders found."
+                        500 -> "Server error. Please try again later."
+                        else -> "Failed to load available orders. Please try again."
+                    }
+                    showError(errorMessage)
+                    _availableOrders.value = emptyList()
                 }
             } catch (e: Exception) {
-                showError("Network error: ${e.message}")
+                // Provide user-friendly error messages
+                val errorMessage = when {
+                    e is java.net.SocketTimeoutException || 
+                    e is java.net.UnknownHostException ||
+                    e is java.net.ConnectException ||
+                    e.message?.contains("Network", ignoreCase = true) == true ||
+                    e.message?.contains("Connection", ignoreCase = true) == true -> {
+                        "No internet connection. Please check your network and try again."
+                    }
+                    e.message?.contains("timeout", ignoreCase = true) == true -> {
+                        "Connection timeout. Please check your internet connection and try again."
+                    }
+                    else -> {
+                        "Network error occurred. Please check your internet connection and try again."
+                    }
+                }
+                showError(errorMessage)
+                _availableOrders.value = emptyList()
             }
         }
     }

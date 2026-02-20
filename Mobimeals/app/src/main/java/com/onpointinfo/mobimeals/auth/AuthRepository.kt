@@ -45,13 +45,73 @@ class AuthRepository private constructor() {
                     Result.failure(Exception(loginResponse.message))
                 }
             } else {
-                val errorMessage = response.errorBody()?.string() ?: "Login failed with code ${response.code()}"
-                println("DEBUG: Login failed - HTTP ${response.code()}: $errorMessage")
-                Result.failure(Exception(errorMessage))
+                val rawErrorMessage = response.errorBody()?.string() ?: "Login failed with code ${response.code()}"
+                println("DEBUG: Login failed - HTTP ${response.code()}: $rawErrorMessage")
+                
+                // Provide user-friendly error messages based on response code and content
+                val userMessage = when {
+                    response.code() == 403 && rawErrorMessage.contains("not approved", ignoreCase = true) -> {
+                        "Your account is pending approval. Please wait for admin approval or contact support."
+                    }
+                    response.code() == 403 && rawErrorMessage.contains("suspended", ignoreCase = true) -> {
+                        "Your account has been suspended. Please contact support for assistance."
+                    }
+                    response.code() == 403 && rawErrorMessage.contains("not a rider", ignoreCase = true) -> {
+                        "This account is not registered as a rider. Please register as a rider first."
+                    }
+                    response.code() == 401 -> {
+                        "Invalid username or password. Please check your credentials and try again."
+                    }
+                    response.code() == 400 -> {
+                        "Invalid login information. Please check your username and password."
+                    }
+                    response.code() == 500 -> {
+                        "Server error occurred. Please try again later or contact support."
+                    }
+                    response.code() == 502 || response.code() == 503 -> {
+                        "Service temporarily unavailable. Please try again in a few minutes."
+                    }
+                    rawErrorMessage.contains("approval", ignoreCase = true) -> {
+                        "Your account is pending approval. Please wait for admin approval."
+                    }
+                    rawErrorMessage.contains("suspended", ignoreCase = true) -> {
+                        "Your account has been suspended. Please contact support."
+                    }
+                    rawErrorMessage.contains("invalid", ignoreCase = true) -> {
+                        "Invalid username or password. Please check your credentials."
+                    }
+                    else -> {
+                        "Login failed. Please check your credentials and try again."
+                    }
+                }
+                
+                Result.failure(Exception(userMessage))
             }
         } catch (e: Exception) {
             println("DEBUG: Login exception: ${e.message}")
-            Result.failure(e)
+            
+            // Provide user-friendly error messages
+            val userMessage = when {
+                e is java.net.SocketTimeoutException || 
+                e is java.net.UnknownHostException ||
+                e is java.net.ConnectException ||
+                e.message?.contains("Network", ignoreCase = true) == true ||
+                e.message?.contains("Connection", ignoreCase = true) == true -> {
+                    "No internet connection. Please check your network and try again."
+                }
+                e.message?.contains("timeout", ignoreCase = true) == true -> {
+                    "Connection timeout. Please check your internet connection and try again."
+                }
+                e.message?.contains("SSL", ignoreCase = true) == true ||
+                e.message?.contains("certificate", ignoreCase = true) == true -> {
+                    "Secure connection failed. Please try again later."
+                }
+                else -> {
+                    "Network error occurred. Please check your internet connection and try again."
+                }
+            }
+            
+            Result.failure(Exception(userMessage))
         }
     }
     

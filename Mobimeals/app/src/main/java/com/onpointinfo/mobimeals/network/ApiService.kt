@@ -3,40 +3,6 @@ package com.onpointinfo.mobimeals.network
 import com.onpointinfo.mobimeals.data.models.*
 import retrofit2.Response
 import retrofit2.http.*
-
-interface RiderApiService {
-    
-    @GET("/riders/profile/")
-    suspend fun getRiderProfile(): Response<RiderProfile>
-    
-    @POST("/riders/profile/create/")
-    suspend fun createRiderProfile(@Body profile: RiderProfile): Response<ApiResponse>
-    
-    @POST("/riders/toggle-online/")
-    suspend fun toggleOnlineStatus(): Response<ApiResponse>
-    
-    @GET("/riders/available-orders/")
-    suspend fun getAvailableOrders(): Response<List<Order>>
-    
-    @GET("/riders/active-orders/")
-    suspend fun getActiveOrders(): Response<List<DeliveryAssignment>>
-    
-    @POST("/riders/accept-order/{order_id}/")
-    suspend fun acceptOrder(@Path("order_id") orderId: String): Response<ApiResponse>
-    
-    @PUT("/riders/update-delivery/{assignment_id}/")
-    suspend fun updateDeliveryStatus(
-        @Path("assignment_id") assignmentId: String,
-        @Body status: Map<String, String>
-    ): Response<ApiResponse>
-    
-    @GET("/riders/earnings/")
-    suspend fun getRiderEarnings(): Response<EarningsData>
-    
-    @GET("/riders/delivery-history/")
-    suspend fun getDeliveryHistory(): Response<List<DeliveryAssignment>>
-}
-
 interface CustomerApiService {
     
     @GET("/restaurants/")

@@ -30,12 +30,21 @@ class OrderHistoryViewModel : ViewModel() {
             try {
                 val response = riderApiService.getDeliveryHistory()
                 if (response.isSuccessful && response.body() != null) {
-                    _orderHistory.value = response.body()!!
+                    // Handle the response properly - it might be a list of assignments or a different structure
+                    val responseBody = response.body()
+                    if (responseBody is List<*>) {
+                        // Convert to proper DeliveryAssignment objects if possible
+                        val assignments = responseBody.filterIsInstance<DeliveryAssignment>()
+                        _orderHistory.value = assignments
+                    } else {
+                        _orderHistory.value = emptyList()
+                    }
                 } else {
                     showError("Failed to load order history")
                 }
             } catch (e: Exception) {
                 showError("Network error: ${e.message}")
+                _orderHistory.value = emptyList()
             }
         }
     }

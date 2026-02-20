@@ -65,11 +65,17 @@ class RiderDashboardViewModel : ViewModel() {
             try {
                 val response = riderApiService.toggleOnlineStatus()
                 if (response.isSuccessful) {
-                    val currentProfile = _riderProfile.value
-                    currentProfile?.let {
-                        _riderProfile.value = it.copy(isOnline = isOnline)
-                        val status = if (isOnline) "You are now online" else "You are now offline"
-                        showSuccess(status)
+                    val responseBody = response.body()
+                    if (responseBody != null && responseBody["success"] == true) {
+                        val currentProfile = _riderProfile.value
+                        currentProfile?.let {
+                            val newOnlineStatus = responseBody["is_online"] as Boolean
+                            _riderProfile.value = it.copy(isOnline = newOnlineStatus)
+                            val message = responseBody["message"] as String
+                            showSuccess(message)
+                        }
+                    } else {
+                        showError("Failed to update online status")
                     }
                 } else {
                     showError("Failed to update online status")

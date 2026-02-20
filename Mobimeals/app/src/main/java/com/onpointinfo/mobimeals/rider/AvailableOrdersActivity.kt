@@ -14,7 +14,7 @@ class AvailableOrdersActivity : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyState: TextView
     private lateinit var progressBar: ProgressBar
-    private lateinit var btnBack: Button
+    private lateinit var btnBack: ImageButton
     private lateinit var btnRefresh: Button
     private lateinit var availableOrdersAdapter: AvailableOrdersAdapter
     
@@ -40,14 +40,52 @@ class AvailableOrdersActivity : BaseActivity() {
         
         availableOrdersViewModel.errorMessage.observe(this) { errorMessage ->
             errorMessage?.let {
-                showToast(it)
+                when {
+                    it.contains("online", ignoreCase = true) -> {
+                        // Show dialog for online status requirement
+                        androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("Online Status Required")
+                            .setMessage("You must be online to view available orders. Would you like to go online now?")
+                            .setPositiveButton("Go Online") { dialog, _ ->
+                                dialog.dismiss()
+                                // Navigate back to dashboard to toggle online status
+                                finish()
+                            }
+                            .setNegativeButton("Cancel") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .setIcon(R.drawable.ic_info)
+                            .show()
+                    }
+                    it.contains("network", ignoreCase = true) || 
+                    it.contains("connection", ignoreCase = true) ||
+                    it.contains("internet", ignoreCase = true) -> {
+                        // Show network error dialog
+                        androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("Network Error")
+                            .setMessage(it)
+                            .setPositiveButton("Retry") { dialog, _ ->
+                                dialog.dismiss()
+                                availableOrdersViewModel.loadAvailableOrders()
+                            }
+                            .setNegativeButton("Cancel") { dialog, _ ->
+                                dialog.dismiss()
+                            }
+                            .setIcon(R.drawable.ic_warning)
+                            .show()
+                    }
+                    else -> {
+                        showToast(it)
+                    }
+                }
                 availableOrdersViewModel.clearError()
             }
         }
         
         availableOrdersViewModel.successMessage.observe(this) { successMessage ->
             successMessage?.let {
-                showToast(it)
+                // Show success message for empty state
+                tvEmptyState.text = it
                 availableOrdersViewModel.clearSuccess()
             }
         }

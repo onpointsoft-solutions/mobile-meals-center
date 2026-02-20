@@ -74,9 +74,49 @@ class LoginActivity : BaseActivity() {
         
         loginViewModel.errorMessage.observe(this) { errorMessage ->
             errorMessage?.let {
+                // Show appropriate error message with additional context
+                when {
+                    it.contains("approval", ignoreCase = true) -> {
+                        showErrorDialog(
+                            title = "Account Pending Approval",
+                            message = it,
+                            positiveAction = "Contact Support"
+                        )
+                    }
+                    it.contains("suspended", ignoreCase = true) -> {
+                        showErrorDialog(
+                            title = "Account Suspended",
+                            message = it,
+                            positiveAction = "Contact Support"
+                        )
+                    }
+                    it.contains("network", ignoreCase = true) || 
+                    it.contains("connection", ignoreCase = true) ||
+                    it.contains("internet", ignoreCase = true) -> {
+                        showErrorDialog(
+                            title = "Network Error",
+                            message = it,
+                            positiveAction = "Retry"
+                        )
+                    }
+                    it.contains("invalid", ignoreCase = true) ||
+                    it.contains("password", ignoreCase = true) ||
+                    it.contains("username", ignoreCase = true) -> {
+                        showErrorDialog(
+                            title = "Login Failed",
+                            message = it,
+                            positiveAction = "Try Again"
+                        )
+                    }
+                    else -> {
+                        showErrorDialog(
+                            title = "Login Error",
+                            message = it,
+                            positiveAction = "OK"
+                        )
+                    }
+                }
                 animateError()
-                val userFriendlyMessage = getLoginErrorMessage(it)
-                showToast(userFriendlyMessage)
                 loginViewModel.clearError()
             }
         }
@@ -87,7 +127,6 @@ class LoginActivity : BaseActivity() {
                 loginViewModel.clearSuccess()
             }
         }
-        8761098
         loginViewModel.loginResponse.observe(this) { loginResponse ->
             loginResponse?.let {
                 // Save session data using existing method
@@ -419,5 +458,48 @@ class LoginActivity : BaseActivity() {
                 "Request timed out. Please try again."
             else -> "Login failed. Please try again later."
         }
+    }
+    
+    private fun showErrorDialog(title: String, message: String, positiveAction: String) {
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(positiveAction) { dialog, _ ->
+                dialog.dismiss()
+                when (positiveAction) {
+                    "Retry" -> {
+                        // Focus on username field for retry
+                        etUsername.requestFocus()
+                        etUsername.selectAll()
+                    }
+                    "Try Again" -> {
+                        // Focus on username field for retry
+                        etUsername.requestFocus()
+                        etUsername.selectAll()
+                    }
+                    "Contact Support" -> {
+                        // Could open email app or support page
+                        showToast("Please contact our support team for assistance")
+                    }
+                    else -> {
+                        // Just dismiss dialog
+                    }
+                }
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setIcon(
+                when (title) {
+                    "Account Pending Approval" -> R.drawable.ic_info
+                    "Account Suspended" -> R.drawable.ic_warning
+                    "Network Error" -> R.drawable.ic_warning
+                    "Login Failed" -> R.drawable.ic_error
+                    else -> R.drawable.ic_info
+                }
+            )
+            .create()
+        
+        dialog.show()
     }
 }
