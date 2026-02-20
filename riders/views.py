@@ -61,7 +61,13 @@ def toggle_online_status(request):
         return JsonResponse({
             'success': True,
             'is_online': rider.is_online,
-            'message': f"You are now {'online' if rider.is_online else 'offline'}"
+            'message': f"You are now {'online' if rider.is_online else 'offline'}",
+            'debug_info': {
+                'deployment_check': 'v2.0_with_save_and_debug',
+                'old_status': old_status,
+                'new_status': rider.is_online,
+                'db_status_after_refresh': rider.is_online
+            }
         })
         
     except RiderProfile.DoesNotExist:
