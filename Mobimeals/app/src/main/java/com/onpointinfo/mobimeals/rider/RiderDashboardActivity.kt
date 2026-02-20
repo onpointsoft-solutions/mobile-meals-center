@@ -26,6 +26,9 @@ class RiderDashboardActivity : BaseActivity() {
     private lateinit var btnLogout: Button
     private lateinit var progressBar: ProgressBar
     
+    // Flag to prevent switch listener conflicts
+    private var isUpdatingSwitch = false
+    
     override fun getLayoutResource(): Int = R.layout.activity_rider_dashboard
     
     override fun initializeViews() {
@@ -69,8 +72,15 @@ class RiderDashboardActivity : BaseActivity() {
                 println("DEBUG: RiderProfile updated - isOnline: ${it.isOnline}")
                 tvWelcome.text = "Welcome, ${it.user.firstName ?: it.user.username}"
                 
-                // Update switch position
-                switchOnline.isChecked = it.isOnline
+                // Update switch position only if different to prevent infinite loops
+                if (switchOnline.isChecked != it.isOnline) {
+                    println("DEBUG: Updating switch from ${switchOnline.isChecked} to ${it.isOnline}")
+                    isUpdatingSwitch = true
+                    switchOnline.isChecked = it.isOnline
+                    isUpdatingSwitch = false
+                } else {
+                    println("DEBUG: Switch already at correct position: ${it.isOnline}")
+                }
                 
                 // Update status text and appearance
                 updateOnlineStatus(it.isOnline)
@@ -90,7 +100,12 @@ class RiderDashboardActivity : BaseActivity() {
     
     override fun setupListeners() {
         switchOnline.setOnCheckedChangeListener { _, isChecked ->
-            riderDashboardViewModel.toggleOnlineStatus(isChecked)
+            if (!isUpdatingSwitch) {
+                println("DEBUG: Switch changed by user to: $isChecked")
+                riderDashboardViewModel.toggleOnlineStatus(isChecked)
+            } else {
+                println("DEBUG: Switch change ignored due to programmatic update")
+            }
         }
         
         btnAvailableOrders.setOnClickListener {

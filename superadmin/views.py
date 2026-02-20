@@ -846,7 +846,7 @@ class OrderAssignmentView(SuperAdminRequiredMixin, TemplateView):
         
         # Get available riders (approved and active)
         available_riders = RiderProfile.objects.filter(
-            is_approved=True,
+            user__approval_status='approved',
             is_active=True,
             is_online=True
         ).select_related('user').order_by('user__username')
@@ -886,7 +886,7 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
             print(f"DEBUG: Found order: {order.order_number}")
             
             print(f"DEBUG: Looking for rider with id: {rider_id}")
-            rider = RiderProfile.objects.get(id=rider_id, is_approved=True, is_active=True)
+            rider = RiderProfile.objects.get(id=rider_id, user__approval_status='approved', is_active=True)
             print(f"DEBUG: Found rider: {rider.user.username}")
             
             # Check if order is already assigned
