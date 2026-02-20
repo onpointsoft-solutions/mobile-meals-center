@@ -46,9 +46,17 @@ def toggle_online_status(request):
             }, status=403)
         
         # Toggle online status
+        old_status = rider.is_online
         rider.is_online = not rider.is_online
         rider.update_last_active()
+        
+        print(f"DEBUG: Rider {rider.user.username} status changing from {old_status} to {rider.is_online}")
+        
         rider.save()  # Save the changes to database
+        
+        # Verify the save worked by refreshing from database
+        rider.refresh_from_db()
+        print(f"DEBUG: After save, rider status in database: {rider.is_online}")
         
         return JsonResponse({
             'success': True,
