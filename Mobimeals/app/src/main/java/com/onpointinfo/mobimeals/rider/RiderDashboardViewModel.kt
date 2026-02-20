@@ -63,6 +63,7 @@ class RiderDashboardViewModel : ViewModel() {
     fun toggleOnlineStatus(isOnline: Boolean) {
         executeWithLoading {
             try {
+                println("DEBUG: Toggling online status to: $isOnline")
                 val response = riderApiService.toggleOnlineStatus()
                 if (response.isSuccessful) {
                     val responseBody = response.body()
@@ -75,8 +76,9 @@ class RiderDashboardViewModel : ViewModel() {
                             val message = responseBody["message"] as? String ?: "Status updated"
                             
                             println("DEBUG: New online status from backend: $newOnlineStatus")
+                            println("DEBUG: Switch was set to: $isOnline, backend returned: $newOnlineStatus")
                             
-                            // Update the rider profile with the new status
+                            // Always use the backend response as the source of truth
                             val currentProfile = _riderProfile.value
                             currentProfile?.let {
                                 val updatedProfile = it.copy(isOnline = newOnlineStatus)
@@ -84,17 +86,27 @@ class RiderDashboardViewModel : ViewModel() {
                                 println("DEBUG: Updated rider profile online status to: $newOnlineStatus")
                                 showSuccess(message)
                             } ?: run {
-                                // If no profile exists, load it fresh
+                                // If no profile exists, load it fresh from backend
+                                println("DEBUG: No current profile, loading fresh from backend")
                                 loadRiderProfile()
                                 showSuccess(message)
                             }
+                            
+                            // Also refresh earnings when status changes
+                            loadEarnings()
+                            
                         } else {
-                            showError("Failed to update online status")
+                            val errorMsg = responseBody["error"] as? String ?: "Failed to update online status"
+                            println("DEBUG: Backend returned error: $errorMsg")
+                            showError(errorMsg)
                         }
                     } else {
+                        println("DEBUG: Empty response from server")
                         showError("Empty response from server")
                     }
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    println("DEBUG: HTTP error ${response.code()}: $errorBody")
                     showError("Failed to update online status: ${response.code()}")
                 }
             } catch (e: Exception) {

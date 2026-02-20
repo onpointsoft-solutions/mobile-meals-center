@@ -879,7 +879,7 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
         
         try:
             order = Order.objects.get(id=order_id, status='ready')
-            rider = RiderProfile.objects.get(id=rider_id, user__is_approved=True, is_active=True)
+            rider = RiderProfile.objects.get(id=rider_id, is_approved=True, is_active=True)
             
             # Check if order is already assigned
             if DeliveryAssignment.objects.filter(
