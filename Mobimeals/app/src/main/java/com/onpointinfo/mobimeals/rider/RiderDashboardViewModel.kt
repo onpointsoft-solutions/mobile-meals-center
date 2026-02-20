@@ -66,21 +66,39 @@ class RiderDashboardViewModel : ViewModel() {
                 val response = riderApiService.toggleOnlineStatus()
                 if (response.isSuccessful) {
                     val responseBody = response.body()
-                    if (responseBody != null && responseBody["success"] == true) {
-                        val currentProfile = _riderProfile.value
-                        currentProfile?.let {
-                            val newOnlineStatus = responseBody["is_online"] as Boolean
-                            _riderProfile.value = it.copy(isOnline = newOnlineStatus)
-                            val message = responseBody["message"] as String
-                            showSuccess(message)
+                    println("DEBUG: Toggle online response: $responseBody")
+                    
+                    if (responseBody != null) {
+                        val success = responseBody["success"] as? Boolean ?: false
+                        if (success) {
+                            val newOnlineStatus = responseBody["is_online"] as? Boolean ?: false
+                            val message = responseBody["message"] as? String ?: "Status updated"
+                            
+                            println("DEBUG: New online status from backend: $newOnlineStatus")
+                            
+                            // Update the rider profile with the new status
+                            val currentProfile = _riderProfile.value
+                            currentProfile?.let {
+                                val updatedProfile = it.copy(isOnline = newOnlineStatus)
+                                _riderProfile.value = updatedProfile
+                                println("DEBUG: Updated rider profile online status to: $newOnlineStatus")
+                                showSuccess(message)
+                            } ?: run {
+                                // If no profile exists, load it fresh
+                                loadRiderProfile()
+                                showSuccess(message)
+                            }
+                        } else {
+                            showError("Failed to update online status")
                         }
                     } else {
-                        showError("Failed to update online status")
+                        showError("Empty response from server")
                     }
                 } else {
-                    showError("Failed to update online status")
+                    showError("Failed to update online status: ${response.code()}")
                 }
             } catch (e: Exception) {
+                println("DEBUG: Toggle online exception: ${e.message}")
                 showError("Network error: ${e.message}")
             }
         }

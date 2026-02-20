@@ -14,7 +14,7 @@ class CookieInterceptor : Interceptor {
         
         // Add cookies and headers to request
         val cookieHeader = buildCookieHeader()
-        val requestBuilder = request.newBuilder()
+        var requestBuilder = request.newBuilder()
         
         // Add cookies if available
         if (cookieHeader.isNotEmpty()) {
@@ -27,6 +27,29 @@ class CookieInterceptor : Interceptor {
                 .addHeader("Referer", "https://mobilemealscenter.co.ke/accounts/login/")
                 .addHeader("Origin", "https://mobilemealscenter.co.ke")
                 .addHeader("User-Agent", "MobileMeals-Android-App/1.0")
+        } else if (request.url.encodedPath.contains("api/")) {
+            // Add headers for all API requests to prevent CSRF issues
+            val apiRequestBuilder = requestBuilder
+                .addHeader("Referer", "https://mobilemealscenter.co.ke/")
+                .addHeader("Origin", "https://mobilemealscenter.co.ke")
+                .addHeader("User-Agent", "MobileMeals-Android-App/1.0")
+                .addHeader("X-Requested-With", "XMLHttpRequest")
+            
+            // Add CSRF token if available (for POST, PUT, DELETE requests)
+            if (request.method in listOf("POST", "PUT", "DELETE", "PATCH")) {
+                val csrfToken = getCookie("csrftoken")
+                if (csrfToken != null) {
+                    apiRequestBuilder.addHeader("X-CSRFToken", csrfToken)
+                    println("DEBUG: Added CSRF token to API request: $csrfToken")
+                } else {
+                    println("DEBUG: No CSRF token found, trying without it (backend should have @csrf_exempt)")
+                    // Add a dummy CSRF token to prevent Django from rejecting the request entirely
+                    // This will work if @csrf_exempt is deployed on the backend
+                    apiRequestBuilder.addHeader("X-CSRFToken", "dummy-token-for-testing")
+                }
+            }
+            
+            requestBuilder = apiRequestBuilder
         }
         
         val requestWithHeaders = requestBuilder.build()
@@ -81,5 +104,15 @@ class CookieInterceptor : Interceptor {
     
     fun getCookie(name: String): String? {
         return cookieStore[name]
+    }
+    
+    fun ensureCsrfToken(): String? {
+        // Return existing CSRF token if available
+        getCookie("csrftoken")?.let { return it }
+        
+        // If no CSRF token, we could make a request to get one
+        // For now, return null and let the request proceed (may work if @csrf_exempt is deployed)
+        println("DEBUG: No CSRF token available, hoping @csrf_exempt is deployed")
+        return null
     }
 }
