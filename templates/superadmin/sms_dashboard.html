@@ -1,0 +1,176 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}SMS Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">SMS Dashboard</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'superadmin:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- SMS Service Status -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-{{ 'success' if sms_service_active else 'danger' }} shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-{{ 'success' if sms_service_active else 'danger' }} text-uppercase mb-1">
+                                Service Status
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ "Active" if sms_service_active else "Inactive" }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-sms fa-2x text-{{ 'success' if sms_service_active else 'danger' }}"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Username
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ sms_username }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Sender ID
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ sms_sender_id }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-id-badge fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                SMS Enabled
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ "Yes" if sms_enabled else "No" }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-toggle-{{ 'on' if sms_enabled else 'off' }} fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test SMS Form -->
+    <div class="row">
+        <div class="col-xl-6 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Send Test SMS</h6>
+                </div>
+                <div class="card-body">
+                    {% if not sms_service_active %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            SMS service is not active. Please check your Africa's Talking credentials.
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone" 
+                                   placeholder="+254712345678" required
+                                   pattern="\+[0-9]{12,}" title="Enter phone number in international format (e.g., +254712345678)">
+                            <div class="form-text">Enter phone number in international format (e.g., +254712345678)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="3" required>Test SMS from Mobile Meals Center SMS Dashboard</textarea>
+                            <div class="form-text">Maximum 160 characters recommended</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" {% if not sms_service_active %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane"></i> Send Test SMS
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- SMS Information -->
+        <div class="col-xl-6 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">SMS Integration Information</h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="font-weight-bold">Africa's Talking Integration</h6>
+                    <p class="text-muted">This system uses Africa's Talking SMS gateway to send notifications to customers and riders.</p>
+                    
+                    <h6 class="font-weight-bold mt-3">Automated SMS Notifications</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success"></i> Order confirmation to customer</li>
+                        <li><i class="fas fa-check text-success"></i> Rider assignment notification</li>
+                        <li><i class="fas fa-check text-success"></i> Customer notification when rider assigned</li>
+                        <li><i class="fas fa-check text-success"></i> Order delivery confirmation</li>
+                    </ul>
+                    
+                    <h6 class="font-weight-bold mt-3">Configuration</h6>
+                    <p class="text-muted">To configure SMS service:</p>
+                    <ol>
+                        <li>Sign up at <a href="https://account.africastalking.com/" target="_blank">Africa's Talking</a></li>
+                        <li>Get your username and API key</li>
+                        <li>Update your .env file with the credentials</li>
+                        <li>Restart your Django application</li>
+                    </ol>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Use the sandbox environment for testing to avoid charges.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

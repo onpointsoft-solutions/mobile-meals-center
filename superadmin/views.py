@@ -10,6 +10,10 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sms_service import sms_service
 
 from accounts.models import User
 from restaurants.models import Restaurant
@@ -917,6 +921,20 @@ class AssignOrderView(SuperAdminRequiredMixin, View):
             order.save()
             print(f"DEBUG: Order status updated successfully")
             
+            # Send SMS notifications
+            try:
+                # Send SMS to rider about new assignment
+                sms_service.send_rider_assignment_notification(assignment)
+                print(f"DEBUG: Rider assignment SMS sent")
+                
+                # Send SMS to customer about rider assignment
+                sms_service.send_customer_rider_assigned(assignment)
+                print(f"DEBUG: Customer rider assignment SMS sent")
+                
+            except Exception as e:
+                print(f"DEBUG: Failed to send SMS notifications: {e}")
+                logger.error(f"Failed to send SMS notifications for assignment {assignment.id}: {e}")
+            
             # Log activity
             AdminActivityLog.objects.create(
                 admin=request.user,
@@ -975,3 +993,44 @@ class CancelAssignmentView(SuperAdminRequiredMixin, View):
             messages.error(request, f'Error cancelling assignment: {str(e)}')
         
         return redirect('superadmin:order_assignment')
+
+
+class SMSDashboardView(SuperAdminRequiredMixin, TemplateView):
+    """View to display SMS service status and testing"""
+    template_name = 'superadmin/sms_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get SMS service status
+        context['sms_service_active'] = sms_service.is_active
+        context['sms_username'] = getattr(settings, 'AFRICASTALKING_USERNAME', 'Not configured')
+        context['sms_sender_id'] = getattr(settings, 'AFRICASTALKING_SENDER_ID', 'Not configured')
+        context['sms_enabled'] = getattr(settings, 'SMS_ENABLED', False)
+        
+        # Get recent SMS logs (if you implement logging)
+        # This would require creating an SMSLog model
+        
+        return context
+    
+    def post(self, request):
+        """Handle test SMS sending"""
+        phone = request.POST.get('phone')
+        message = request.POST.get('message', 'Test SMS from Mobile Meals Center SMS Dashboard')
+        
+        if not phone:
+            messages.error(request, 'Please provide a phone number')
+            return redirect('superadmin:sms_dashboard')
+        
+        try:
+            response = sms_service.send_sms(phone, message)
+            
+            if response['status'] == 'success':
+                messages.success(request, 'Test SMS sent successfully!')
+            else:
+                messages.error(request, f"Failed to send SMS: {response['message']}")
+                
+        except Exception as e:
+            messages.error(request, f"Error sending SMS: {str(e)}")
+        
+        return redirect('superadmin:sms_dashboard')

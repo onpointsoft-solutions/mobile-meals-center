@@ -57,4 +57,7 @@ urlpatterns = [
     path('order-assignment/', views.OrderAssignmentView.as_view(), name='order_assignment'),
     path('assign-order/', views.AssignOrderView.as_view(), name='assign_order'),
     path('cancel-assignment/<uuid:assignment_id>/', views.CancelAssignmentView.as_view(), name='cancel_assignment'),
+    
+    # SMS Management
+    path('sms-dashboard/', views.SMSDashboardView.as_view(), name='sms_dashboard'),
 ]

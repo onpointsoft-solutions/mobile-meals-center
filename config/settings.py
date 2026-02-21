@@ -390,3 +390,12 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+# Africa's Talking SMS Configuration
+AFRICASTALKING_USERNAME = 'MBNS'  # Direct configuration for Africa's Talking
+AFRICASTALKING_API_KEY = 'atsk_0f73fc6ffcef8390e2d9d2c77997e064ee5c5589074baebbba999106037f11f0e967a4f9'
+AFRICASTALKING_SENDER_ID = 'MobileMeals'
+
+# SMS Configuration
+SMS_ENABLED = True  # SMS notifications enabled
+SMS_DEBUG = False   # Production mode (no debug output)

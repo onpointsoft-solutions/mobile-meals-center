@@ -11,6 +11,12 @@ from .models import Order, OrderItem
 from .forms import OrderForm
 from meals.models import Meal
 
+# Import SMS service
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sms_service import sms_service
+
 logger = logging.getLogger(__name__)
 
 class OrderListView(LoginRequiredMixin, ListView):
@@ -267,6 +273,13 @@ class OrderCreateView(LoginRequiredMixin, CreateView):
             
             # Clear cart
             del self.request.session['cart']
+            
+            # Send order confirmation SMS
+            try:
+                sms_service.send_order_confirmation(order)
+                logger.info(f"Order confirmation SMS sent for order {order.order_number}")
+            except Exception as e:
+                logger.error(f"Failed to send order confirmation SMS: {e}")
             
             messages.success(self.request, f'Order #{order.order_number} created successfully! Please complete payment.')
             return redirect('payments:process_payment', order_id=order.pk)
