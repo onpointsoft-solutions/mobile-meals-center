@@ -148,13 +148,12 @@
                                 </div>
                                 <div class="ml-3">
                                     {% if total_users > 0 %}
-                                        {% with percentage=users_with_phone|div:total_users|mul:100 %}
+                                        {% widthratio users_with_phone total_users 100 as percentage %}
                                         <div class="progress" style="width: 100px; height: 20px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage|floatformat:0 }}%">
-                                                {{ percentage|floatformat:0 }}%
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage }}%">
+                                                {{ percentage }}%
                                             </div>
                                         </div>
-                                        {% endwith %}
                                     {% endif %}
                                 </div>
                             </div>

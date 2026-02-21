@@ -22,21 +22,29 @@
     </div>
 
     <!-- SMS Service Status -->
+    {% if sms_service_active %}
+        {% setvar status_color 'success' %}
+        {% setvar status_text 'Active' %}
+    {% else %}
+        {% setvar status_color 'danger' %}
+        {% setvar status_text 'Inactive' %}
+    {% endif %}
+    
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-{{ 'success' if sms_service_active else 'danger' }} shadow h-100 py-2">
+            <div class="card border-left-{{ status_color }} shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-{{ 'success' if sms_service_active else 'danger' }} text-uppercase mb-1">
+                            <div class="text-xs font-weight-bold text-{{ status_color }} text-uppercase mb-1">
                                 Service Status
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ "Active" if sms_service_active else "Inactive" }}
+                                {{ status_text }}
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-sms fa-2x text-{{ 'success' if sms_service_active else 'danger' }}"></i>
+                            <i class="fas fa-sms fa-2x text-{{ status_color }}"></i>
                         </div>
                     </div>
                 </div>
