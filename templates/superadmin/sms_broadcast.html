@@ -4,6 +4,14 @@
 {% block title %}SMS Broadcast{% endblock %}
 
 {% block content %}
+{% if sms_service_active %}
+    {% setvar status_color 'success' %}
+    {% setvar status_text 'Service Active' %}
+{% else %}
+    {% setvar status_color 'danger' %}
+    {% setvar status_text 'Service Inactive' %}
+{% endif %}
+
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -176,8 +184,8 @@
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">Send Broadcast SMS</h6>
-                    <div class="badge badge-{{ 'success' if sms_service_active else 'danger' }}">
-                        {{ "Service Active" if sms_service_active else "Service Inactive" }}
+                    <div class="badge badge-{{ status_color }}">
+                        {{ status_text }}
                     </div>
                 </div>
                 <div class="card-body">
