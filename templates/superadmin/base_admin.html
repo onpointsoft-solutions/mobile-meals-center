@@ -76,6 +76,41 @@
             margin-right: 10px;
         }
         
+        .admin-sidebar .dropdown-menu {
+            background: var(--admin-secondary);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin-left: 10px;
+            padding: 0.5rem 0;
+        }
+        
+        .admin-sidebar .dropdown-item {
+            color: rgba(255,255,255,0.8);
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-sidebar .dropdown-item:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .admin-sidebar .dropdown-item.active {
+            color: white;
+            background: var(--admin-accent);
+        }
+        
+        .admin-sidebar .dropdown-item i {
+            width: 16px;
+            margin-right: 8px;
+        }
+        
+        .admin-sidebar .badge {
+            font-size: 0.7em;
+            padding: 0.2em 0.5em;
+        }
+        
         .admin-content {
             margin-left: 260px;
             padding: 2rem;
@@ -206,6 +241,36 @@
                href="{% url 'superadmin:order_assignment' %}">
                 <i class="bi bi-truck"></i> Order Assignment
             </a>
+            
+            <!-- SMS Management -->
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {% if 'sms' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="#" id="smsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-chat-dots"></i> SMS Management
+                    <span class="badge bg-success ms-auto">New</span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="smsDropdown">
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'sms_dashboard' %}active{% endif %}" 
+                           href="{% url 'superadmin:sms_dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> SMS Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'sms_broadcast' %}active{% endif %}" 
+                           href="{% url 'superadmin:sms_broadcast' %}">
+                            <i class="bi bi-send"></i> Send Broadcast
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item {% if request.resolver_match.url_name == 'sms_history' %}active{% endif %}" 
+                           href="{% url 'superadmin:sms_history' %}">
+                            <i class="bi bi-clock-history"></i> SMS History
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
             <a class="nav-link {% if 'complaint' in request.resolver_match.url_name %}active{% endif %}" 
                href="{% url 'superadmin:complaints' %}">
                 <i class="bi bi-chat-left-text"></i> Complaints
