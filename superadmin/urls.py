@@ -60,4 +60,6 @@ urlpatterns = [
     
     # SMS Management
     path('sms-dashboard/', views.SMSDashboardView.as_view(), name='sms_dashboard'),
+    path('sms-broadcast/', views.SMSBroadcastView.as_view(), name='sms_broadcast'),
+    path('sms-history/', views.SMSHistoryView.as_view(), name='sms_history'),
 ]

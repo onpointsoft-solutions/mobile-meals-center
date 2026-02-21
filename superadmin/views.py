@@ -1034,3 +1034,132 @@ class SMSDashboardView(SuperAdminRequiredMixin, TemplateView):
             messages.error(request, f"Error sending SMS: {str(e)}")
         
         return redirect('superadmin:sms_dashboard')
+
+
+class SMSBroadcastView(SuperAdminRequiredMixin, TemplateView):
+    """View to send SMS broadcasts to all users or specific user groups"""
+    template_name = 'superadmin/sms_broadcast.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get user statistics
+        from users.models import User
+        from riders.models import RiderProfile
+        
+        context['total_users'] = User.objects.count()
+        context['total_customers'] = User.objects.filter(user_type='customer').count()
+        context['total_restaurants'] = User.objects.filter(user_type='restaurant').count()
+        context['total_riders'] = RiderProfile.objects.count()
+        context['active_riders'] = RiderProfile.objects.filter(is_active=True).count()
+        context['online_riders'] = RiderProfile.objects.filter(is_online=True).count()
+        
+        # Get users with phone numbers
+        context['users_with_phone'] = User.objects.exclude(phone='').exclude(phone__isnull=True).count()
+        
+        return context
+    
+    def post(self, request):
+        recipient_type = request.POST.get('recipient_type')
+        message = request.POST.get('message')
+        custom_phone = request.POST.get('custom_phone', '')
+        
+        if not message:
+            messages.error(request, 'Please enter a message')
+            return redirect('superadmin:sms_broadcast')
+        
+        try:
+            phone_numbers = []
+            
+            if recipient_type == 'all_users':
+                # Send to all users with phone numbers
+                from users.models import User
+                users = User.objects.exclude(phone='').exclude(phone__isnull=True)
+                phone_numbers = [user.phone for user in users if user.phone]
+                
+            elif recipient_type == 'customers':
+                # Send to all customers with phone numbers
+                from users.models import User
+                customers = User.objects.filter(user_type='customer').exclude(phone='').exclude(phone__isnull=True)
+                phone_numbers = [customer.phone for customer in customers if customer.phone]
+                
+            elif recipient_type == 'restaurants':
+                # Send to all restaurants with phone numbers
+                from users.models import User
+                restaurants = User.objects.filter(user_type='restaurant').exclude(phone='').exclude(phone__isnull=True)
+                phone_numbers = [restaurant.phone for restaurant in restaurants if restaurant.phone]
+                
+            elif recipient_type == 'riders':
+                # Send to all riders with phone numbers
+                from riders.models import RiderProfile
+                riders = RiderProfile.objects.filter(
+                    user__phone__isnull=False
+                ).exclude(user__phone='')
+                phone_numbers = [rider.user.phone for rider in riders if rider.user.phone]
+                
+            elif recipient_type == 'active_riders':
+                # Send to active riders only
+                from riders.models import RiderProfile
+                active_riders = RiderProfile.objects.filter(
+                    is_active=True,
+                    user__phone__isnull=False
+                ).exclude(user__phone='')
+                phone_numbers = [rider.user.phone for rider in active_riders if rider.user.phone]
+                
+            elif recipient_type == 'online_riders':
+                # Send to online riders only
+                from riders.models import RiderProfile
+                online_riders = RiderProfile.objects.filter(
+                    is_online=True,
+                    user__phone__isnull=False
+                ).exclude(user__phone='')
+                phone_numbers = [rider.user.phone for rider in online_riders if rider.user.phone]
+                
+            elif recipient_type == 'custom':
+                # Send to custom phone numbers
+                if custom_phone:
+                    # Split by comma, semicolon, or newline
+                    numbers = custom_phone.replace('\n', ',').replace(';', ',').split(',')
+                    phone_numbers = [num.strip() for num in numbers if num.strip()]
+            
+            if not phone_numbers:
+                messages.error(request, 'No valid phone numbers found for the selected recipient type')
+                return redirect('superadmin:sms_broadcast')
+            
+            # Send SMS
+            response = sms_service.send_sms(phone_numbers, message)
+            
+            if response['status'] == 'success':
+                messages.success(request, f'Broadcast SMS sent successfully to {len(phone_numbers)} recipients!')
+                
+                # Log the broadcast
+                AdminActivityLog.objects.create(
+                    admin=request.user,
+                    action='sms_broadcast',
+                    target_model='User',
+                    description=f'Sent SMS broadcast to {recipient_type} ({len(phone_numbers)} recipients)',
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
+                
+            else:
+                messages.error(request, f"Failed to send broadcast SMS: {response['message']}")
+                
+        except Exception as e:
+            messages.error(request, f"Error sending broadcast SMS: {str(e)}")
+        
+        return redirect('superadmin:sms_broadcast')
+
+
+class SMSHistoryView(SuperAdminRequiredMixin, TemplateView):
+    """View to display SMS history and logs"""
+    template_name = 'superadmin/sms_history.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get recent admin activities related to SMS
+        context['sms_activities'] = AdminActivityLog.objects.filter(
+            action__in=['sms_broadcast', 'assign']  # assign action includes SMS notifications
+        ).order_by('-created_at')[:50]
+        
+        return context

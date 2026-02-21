@@ -1,0 +1,374 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}SMS Broadcast{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">SMS Broadcast</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'superadmin:sms_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to SMS Dashboard
+            </a>
+            <a href="{% url 'superadmin:sms_history' %}" class="btn btn-info">
+                <i class="fas fa-history"></i> SMS History
+            </a>
+        </div>
+    </div>
+
+    <!-- User Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Users
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Customers
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_customers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Restaurants
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_restaurants }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-store fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Riders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_riders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bicycle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Riders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_riders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bicycle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Online Riders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ online_riders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Numbers Statistics -->
+    <div class="row mb-4">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Phone Number Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Users with Phone Numbers
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ users_with_phone }} / {{ total_users }}</div>
+                                </div>
+                                <div class="ml-3">
+                                    {% if total_users > 0 %}
+                                        {% with percentage=users_with_phone|div:total_users|mul:100 %}
+                                        <div class="progress" style="width: 100px; height: 20px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ percentage|floatformat:0 }}%">
+                                                {{ percentage|floatformat:0 }}%
+                                            </div>
+                                        </div>
+                                        {% endwith %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                Only users with valid phone numbers will receive SMS broadcasts.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Form -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Send Broadcast SMS</h6>
+                    <div class="badge badge-{{ 'success' if sms_service_active else 'danger' }}">
+                        {{ "Service Active" if sms_service_active else "Service Inactive" }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if not sms_service_active %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            SMS service is not active. Please check your Africa's Talking credentials.
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="recipient_type" class="form-label">Recipient Type</label>
+                            <select class="form-control" id="recipient_type" name="recipient_type" required>
+                                <option value="">Select recipients...</option>
+                                <optgroup label="All Users">
+                                    <option value="all_users">All Users ({{ users_with_phone }} with phone numbers)</option>
+                                </optgroup>
+                                <optgroup label="By User Type">
+                                    <option value="customers">Customers Only</option>
+                                    <option value="restaurants">Restaurants Only</option>
+                                    <option value="riders">All Riders</option>
+                                </optgroup>
+                                <optgroup label="Riders by Status">
+                                    <option value="active_riders">Active Riders Only ({{ active_riders }})</option>
+                                    <option value="online_riders">Online Riders Only ({{ online_riders }})</option>
+                                </optgroup>
+                                <optgroup label="Custom">
+                                    <option value="custom">Custom Phone Numbers</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4" id="custom_phone_div" style="display: none;">
+                            <label for="custom_phone" class="form-label">Custom Phone Numbers</label>
+                            <textarea class="form-control" id="custom_phone" name="custom_phone" rows="4" 
+                                      placeholder="Enter phone numbers, one per line or separated by commas&#10;Example:&#10;+254712345678&#10;+254723456789&#10;+254734567890"></textarea>
+                            <div class="form-text">Enter phone numbers in international format (+254712345678)</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" required 
+                                      placeholder="Enter your broadcast message here..."></textarea>
+                            <div class="form-text">
+                                <span id="char_count">0</span> characters (Recommended: 160 characters or less for standard SMS)
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Important:</strong> This will send SMS to all selected recipients. Please review your message carefully before sending.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" {% if not sms_service_active %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane"></i> Send Broadcast SMS
+                        </button>
+                        
+                        <button type="button" class="btn btn-secondary ml-2" onclick="clearForm()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Templates -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Message Templates</h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="font-weight-bold">Quick Templates</h6>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-primary w-100 text-left" onclick="setTemplate('maintenance')">
+                            <i class="fas fa-tools"></i> System Maintenance
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-primary w-100 text-left" onclick="setTemplate('promotion')">
+                            <i class="fas fa-tag"></i> Promotion/Special Offer
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-primary w-100 text-left" onclick="setTemplate('announcement')">
+                            <i class="fas fa-bullhorn"></i> General Announcement
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-primary w-100 text-left" onclick="setTemplate('holiday')">
+                            <i class="fas fa-calendar-alt"></i> Holiday Greeting
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button class="btn btn-sm btn-outline-primary w-100 text-left" onclick="setTemplate('urgent')">
+                            <i class="fas fa-exclamation-triangle"></i> Urgent Notice
+                        </button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6 class="font-weight-bold">Best Practices</h6>
+                    <ul class="small text-muted">
+                        <li>Keep messages under 160 characters</li>
+                        <li>Include your business name</li>
+                        <li>Provide clear call-to-action</li>
+                        <li>Include contact information</li>
+                        <li>Time messages appropriately</li>
+                        <li>Avoid spam-like content</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>SMS Costs:</strong> Each SMS sent will incur charges from Africa's Talking.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide custom phone numbers field
+document.getElementById('recipient_type').addEventListener('change', function() {
+    const customDiv = document.getElementById('custom_phone_div');
+    if (this.value === 'custom') {
+        customDiv.style.display = 'block';
+        document.getElementById('custom_phone').required = true;
+    } else {
+        customDiv.style.display = 'none';
+        document.getElementById('custom_phone').required = false;
+    }
+});
+
+// Character counter
+document.getElementById('message').addEventListener('input', function() {
+    const charCount = this.value.length;
+    document.getElementById('char_count').textContent = charCount;
+    
+    if (charCount > 160) {
+        document.getElementById('char_count').style.color = '#dc3545';
+    } else {
+        document.getElementById('char_count').style.color = '#6c757d';
+    }
+});
+
+// Message templates
+function setTemplate(type) {
+    const messageField = document.getElementById('message');
+    let template = '';
+    
+    switch(type) {
+        case 'maintenance':
+            template = 'Mobile Meals Center: System maintenance scheduled for [Date] from [Time] to [Time]. Services may be temporarily unavailable. We apologize for any inconvenience. Thank you!';
+            break;
+        case 'promotion':
+            template = 'Mobile Meals Center: 🎉 Special Offer! Get [Discount]% off your next order with code [CODE]. Valid until [Date]. Order now via our app! 📱';
+            break;
+        case 'announcement':
+            template = 'Mobile Meals Center: [Announcement]. For more details, visit our website or contact us at +254712345678. Thank you!';
+            break;
+        case 'holiday':
+            template = 'Mobile Meals Center: Happy [Holiday]! 🎉 Special holiday menu available. Order now and celebrate with delicious meals! 🍕🍔';
+            break;
+        case 'urgent':
+            template = 'URGENT: Mobile Meals Center - [Important Message]. Please take immediate action. Contact us at +254712345678 for assistance.';
+            break;
+    }
+    
+    messageField.value = template;
+    messageField.dispatchEvent(new Event('input'));
+}
+
+// Clear form
+function clearForm() {
+    document.getElementById('recipient_type').value = '';
+    document.getElementById('custom_phone').value = '';
+    document.getElementById('message').value = '';
+    document.getElementById('custom_phone_div').style.display = 'none';
+    document.getElementById('custom_phone').required = false;
+    document.getElementById('char_count').textContent = '0';
+    document.getElementById('char_count').style.color = '#6c757d';
+}
+</script>
+{% endblock %}

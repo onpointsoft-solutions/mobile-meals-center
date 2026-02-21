@@ -1,0 +1,201 @@
+{% extends 'superadmin/base_admin.html' %}
+{% load static %}
+
+{% block title %}SMS History{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">SMS History</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'superadmin:sms_dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to SMS Dashboard
+            </a>
+            <a href="{% url 'superadmin:sms_broadcast' %}" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Send Broadcast
+            </a>
+        </div>
+    </div>
+
+    <!-- SMS Activities -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent SMS Activities</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-info" onclick="refreshHistory()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if sms_activities %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Admin</th>
+                                        <th>Action</th>
+                                        <th>Description</th>
+                                        <th>IP Address</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in sms_activities %}
+                                    <tr>
+                                        <td>
+                                            <div class="font-weight-bold">{{ activity.created_at|date:"M d, Y" }}</div>
+                                            <div class="small text-muted">{{ activity.created_at|time:"g:i A" }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-weight-bold">{{ activity.admin.get_full_name|default:activity.admin.username }}</div>
+                                            <div class="small text-muted">{{ activity.admin.email }}</div>
+                                        </td>
+                                        <td>
+                                            {% if activity.action == 'sms_broadcast' %}
+                                                <span class="badge badge-primary">SMS Broadcast</span>
+                                            {% elif activity.action == 'assign' %}
+                                                <span class="badge badge-success">Order Assignment</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">{{ activity.action }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="small">{{ activity.description }}</div>
+                                        </td>
+                                        <td>
+                                            <code class="small">{{ activity.ip_address|default:"N/A" }}</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-success">Completed</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-sms fa-3x text-gray-300 mb-3"></i>
+                            <h5 class="text-gray-600">No SMS Activities Found</h5>
+                            <p class="text-gray-500">No SMS activities have been recorded yet.</p>
+                            <a href="{% url 'superadmin:sms_broadcast' %}" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Your First Broadcast
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Statistics -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total SMS Activities
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ sms_activities|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-sms fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Broadcast Messages
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ sms_activities|dictsort:"created_at"|slice:":50"|filter_action:"sms_broadcast"|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-paper-plane fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Order Assignment SMS
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ sms_activities|dictsort:"created_at"|slice:":50"|filter_action:"assign"|length }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bicycle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Information -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">SMS Activity Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Types of SMS Activities</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-paper-plane text-primary"></i> <strong>SMS Broadcast:</strong> Manual broadcasts sent to multiple users</li>
+                                <li><i class="fas fa-bicycle text-success"></i> <strong>Order Assignment:</strong> Automated SMS when orders are assigned to riders</li>
+                                <li><i class="fas fa-shopping-cart text-info"></i> <strong>Order Confirmation:</strong> Automated SMS when customers place orders</li>
+                                <li><i class="fas fa-check-circle text-warning"></i> <strong>Delivery Confirmation:</strong> Automated SMS when orders are delivered</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="font-weight-bold">Activity Details</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-user"></i> <strong>Admin:</strong> Who performed the action</li>
+                                <li><i class="fas fa-clock"></i> <strong>Timestamp:</strong> When the action occurred</li>
+                                <li><i class="fas fa-globe"></i> <strong>IP Address:</strong> Source of the action</li>
+                                <li><i class="fas fa-file-alt"></i> <strong>Description:</strong> Details of the SMS activity</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> This history shows the most recent 50 SMS activities. For detailed SMS delivery reports and usage statistics, check your Africa's Talking dashboard.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshHistory() {
+    location.reload();
+}
+</script>
+{% endblock %}
