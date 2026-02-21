@@ -91,7 +91,7 @@ class RiderDashboardActivity : BaseActivity() {
         
         riderDashboardViewModel.earningsData.observe(this) { earnings ->
             earnings?.let {
-                tvTodayEarnings.text = "Today's Earnings: $${String.format("%.2f", it.todayEarnings)}"
+                tvTodayEarnings.text = "Today's Earnings: KES ${String.format("%.2f", it.todayEarnings)}"
                 tvTodayDeliveries.text = "Today's Deliveries: ${it.totalDeliveries}"
                 tvRating.text = "Rating: ${String.format("%.1f", it.averageRating)}⭐"
             }

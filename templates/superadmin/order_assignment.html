@@ -362,7 +362,9 @@ function showAssignModal(orderId, orderNumber, orderAmount) {
     document.getElementById('deliveryFee').value = '0.00';
     document.getElementById('riderSelect').value = '';
     
-    $('#assignModal').modal('show');
+    // Use Bootstrap 5 native JavaScript
+    const modal = new bootstrap.Modal(document.getElementById('assignModal'));
+    modal.show();
 }
 
 function quickAssign(riderId, riderName) {

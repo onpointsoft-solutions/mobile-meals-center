@@ -62,7 +62,7 @@ class OrderHistoryAdapter(
             setStatusColor(assignment.status)
             
             // Show earnings if available
-            tvEarnings.text = "Earnings: $${assignment.order.totalAmount}"
+            tvEarnings.text = "Earnings: KES ${assignment.order.totalAmount}"
             
             itemView.setOnClickListener {
                 onOrderClick(assignment)

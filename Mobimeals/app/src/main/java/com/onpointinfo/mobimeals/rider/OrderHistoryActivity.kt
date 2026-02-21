@@ -2,6 +2,7 @@ package com.onpointinfo.mobimeals.rider
 
 import android.os.Bundle
 import android.widget.*
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +15,7 @@ class OrderHistoryActivity : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyState: TextView
     private lateinit var progressBar: ProgressBar
-    private lateinit var btnBack: Button
+    private lateinit var btnBack: AppCompatImageButton
     private lateinit var orderHistoryAdapter: OrderHistoryAdapter
     
     override fun getLayoutResource(): Int = R.layout.activity_order_history
