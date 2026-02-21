@@ -5,11 +5,9 @@
 
 {% block content %}
 {% if sms_service_active %}
-    {% setvar status_color 'success' %}
-    {% setvar status_text 'Service Active' %}
+    {% with status_color='success' status_text='Service Active' %}
 {% else %}
-    {% setvar status_color 'danger' %}
-    {% setvar status_text 'Service Inactive' %}
+    {% with status_color='danger' status_text='Service Inactive' %}
 {% endif %}
 
 <div class="container-fluid">
@@ -177,6 +175,7 @@
             </div>
         </div>
     </div>
+    {% endwith %}
 
     <!-- Broadcast Form -->
     <div class="row">
