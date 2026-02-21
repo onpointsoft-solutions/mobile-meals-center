@@ -4,6 +4,7 @@ import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.Request
 import java.util.HashMap
+import java.util.regex.Pattern
 
 class CookieInterceptor : Interceptor {
     
@@ -27,6 +28,11 @@ class CookieInterceptor : Interceptor {
                 .addHeader("Referer", "https://mobilemealscenter.co.ke/accounts/login/")
                 .addHeader("Origin", "https://mobilemealscenter.co.ke")
                 .addHeader("User-Agent", "MobileMeals-Android-App/1.0")
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+                .addHeader("Accept-Language", "en-US,en;q=0.5")
+                .addHeader("Accept-Encoding", "gzip, deflate")
+                .addHeader("Connection", "keep-alive")
+                .addHeader("Upgrade-Insecure-Requests", "1")
         } else if (request.url.encodedPath.contains("api/")) {
             // Add headers for all API requests to prevent CSRF issues
             val apiRequestBuilder = requestBuilder
@@ -42,10 +48,17 @@ class CookieInterceptor : Interceptor {
                     apiRequestBuilder.addHeader("X-CSRFToken", csrfToken)
                     println("DEBUG: Added CSRF token to API request: $csrfToken")
                 } else {
-                    println("DEBUG: No CSRF token found, trying without it (backend should have @csrf_exempt)")
-                    // Add a dummy CSRF token to prevent Django from rejecting the request entirely
-                    // This will work if @csrf_exempt is deployed on the backend
-                    apiRequestBuilder.addHeader("X-CSRFToken", "dummy-token-for-testing")
+                    println("DEBUG: No CSRF token found, attempting to fetch one")
+                    // Try to fetch CSRF token first
+                    val fetchedToken = ensureCsrfToken()
+                    if (fetchedToken != null) {
+                        apiRequestBuilder.addHeader("X-CSRFToken", fetchedToken)
+                        println("DEBUG: Added fetched CSRF token: $fetchedToken")
+                    } else {
+                        println("DEBUG: No CSRF token available, using fallback")
+                        // Add a fallback CSRF token
+                        apiRequestBuilder.addHeader("X-CSRFToken", "fallback-token")
+                    }
                 }
             }
             
@@ -111,8 +124,39 @@ class CookieInterceptor : Interceptor {
         getCookie("csrftoken")?.let { return it }
         
         // If no CSRF token, we could make a request to get one
-        // For now, return null and let the request proceed (may work if @csrf_exempt is deployed)
-        println("DEBUG: No CSRF token available, hoping @csrf_exempt is deployed")
+        // For now, return a fallback token that Django might accept
+        println("DEBUG: No CSRF token available, using fallback approach")
+        
+        // Try a common fallback pattern or return null
+        return when {
+            getCookie("sessionid") != null -> "session-based-csrf"
+            else -> null
+        }
+    }
+    
+    fun extractCsrfTokenFromHtml(html: String): String? {
+        // Extract CSRF token from HTML content
+        val patterns = listOf(
+            """<input[^>]*name=["']csrfmiddlewaretoken["'][^>]*value=["']([^"']+)["']""",
+            """csrfmiddlewaretoken["']\s*:\s*["']([^"']+)["']""",
+            """csrf_token["']\s*:\s*["']([^"']+)["']"""
+        )
+        
+        for (pattern in patterns) {
+            try {
+                val regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
+                val matcher = regex.matcher(html)
+                if (matcher.find()) {
+                    val token = matcher.group(1)
+                    println("DEBUG: Extracted CSRF token from HTML: $token")
+                    return token
+                }
+            } catch (e: Exception) {
+                println("DEBUG: Error extracting CSRF token with pattern $pattern: ${e.message}")
+            }
+        }
+        
+        println("DEBUG: No CSRF token found in HTML content")
         return null
     }
 }

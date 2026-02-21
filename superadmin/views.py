@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, UpdateView, DeleteView, TemplateView, View, CreateView, FormView
+from django.views.generic import ListView, DetailView, TemplateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import LoginView
@@ -8,6 +8,7 @@ from django.urls import reverse_lazy
 from django.db.models import Count, Sum, Q, Avg
 from django.http import JsonResponse
 from django.utils import timezone
+from django.conf import settings
 from datetime import timedelta
 from decimal import Decimal
 import sys
@@ -1044,7 +1045,6 @@ class SMSBroadcastView(SuperAdminRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Get user statistics
-        from users.models import User
         from riders.models import RiderProfile
         
         context['total_users'] = User.objects.count()
@@ -1073,19 +1073,16 @@ class SMSBroadcastView(SuperAdminRequiredMixin, TemplateView):
             
             if recipient_type == 'all_users':
                 # Send to all users with phone numbers
-                from users.models import User
                 users = User.objects.exclude(phone='').exclude(phone__isnull=True)
                 phone_numbers = [user.phone for user in users if user.phone]
                 
             elif recipient_type == 'customers':
                 # Send to all customers with phone numbers
-                from users.models import User
                 customers = User.objects.filter(user_type='customer').exclude(phone='').exclude(phone__isnull=True)
                 phone_numbers = [customer.phone for customer in customers if customer.phone]
                 
             elif recipient_type == 'restaurants':
                 # Send to all restaurants with phone numbers
-                from users.models import User
                 restaurants = User.objects.filter(user_type='restaurant').exclude(phone='').exclude(phone__isnull=True)
                 phone_numbers = [restaurant.phone for restaurant in restaurants if restaurant.phone]
                 
@@ -1158,8 +1155,12 @@ class SMSHistoryView(SuperAdminRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         
         # Get recent admin activities related to SMS
-        context['sms_activities'] = AdminActivityLog.objects.filter(
+        sms_activities = AdminActivityLog.objects.filter(
             action__in=['sms_broadcast', 'assign']  # assign action includes SMS notifications
         ).order_by('-created_at')[:50]
+        
+        context['sms_activities'] = sms_activities
+        context['broadcast_count'] = sms_activities.filter(action='sms_broadcast').count()
+        context['assign_count'] = sms_activities.filter(action='assign').count()
         
         return context

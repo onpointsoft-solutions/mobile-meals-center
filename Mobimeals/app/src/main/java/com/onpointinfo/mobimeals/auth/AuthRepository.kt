@@ -23,6 +23,59 @@ class AuthRepository private constructor() {
         }
     }
     
+    private suspend fun fetchCsrfToken(): Result<String> {
+        return try {
+            println("DEBUG: Fetching CSRF token from login page")
+            val response = RetrofitClient.authApiService.getLoginPage()
+            
+            if (response.isSuccessful) {
+                val htmlContent = response.body()?.string() ?: ""
+                println("DEBUG: Retrieved login page HTML, length: ${htmlContent.length}")
+                
+                // Extract CSRF token from HTML
+                val csrfToken = extractCsrfTokenFromHtml(htmlContent)
+                if (csrfToken != null) {
+                    println("DEBUG: Successfully extracted CSRF token: $csrfToken")
+                    Result.success(csrfToken)
+                } else {
+                    println("DEBUG: No CSRF token found in HTML")
+                    Result.failure(Exception("No CSRF token found"))
+                }
+            } else {
+                println("DEBUG: Failed to fetch login page: ${response.code()}")
+                Result.failure(Exception("Failed to fetch login page: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            println("DEBUG: Exception fetching CSRF token: ${e.message}")
+            Result.failure(e)
+        }
+    }
+    
+    private fun extractCsrfTokenFromHtml(html: String): String? {
+        val patterns = listOf(
+            """<input[^>]*name=["']csrfmiddlewaretoken["'][^>]*value=["']([^"']+)["']""",
+            """csrfmiddlewaretoken["']\s*:\s*["']([^"']+)["']""",
+            """csrf_token["']\s*:\s*["']([^"']+)["']"""
+        )
+        
+        for (pattern in patterns) {
+            try {
+                val regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE)
+                val matcher = regex.matcher(html)
+                if (matcher.find()) {
+                    val token = matcher.group(1)
+                    println("DEBUG: Extracted CSRF token: $token")
+                    return token
+                }
+            } catch (e: Exception) {
+                println("DEBUG: Error extracting CSRF token: ${e.message}")
+            }
+        }
+        
+        println("DEBUG: No CSRF token found in HTML")
+        return null
+    }
+    
     suspend fun login(username: String, password: String, userType: String): Result<LoginResponse> {
         return try {
             println("DEBUG: Attempting rider API login for user: $username")
@@ -33,7 +86,19 @@ class AuthRepository private constructor() {
             
             println("DEBUG: Login response code: ${response.code()}")
             
-            if (response.isSuccessful && response.body() != null) {
+            // Handle Django login which typically returns 302 redirect on success
+            if (response.code() == 302) {
+                println("DEBUG: Login successful - received 302 redirect")
+                // Django login successful - create a mock successful response
+                val successResponse = LoginResponse(
+                    success = true,
+                    access_token = "session_token",
+                    refresh_token = null,
+                    user = null,
+                    message = "Login successful"
+                )
+                Result.success(successResponse)
+            } else if (response.isSuccessful && response.body() != null) {
                 val loginResponse = response.body()!!
                 println("DEBUG: Login response success: ${loginResponse.success}")
                 

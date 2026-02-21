@@ -122,7 +122,7 @@
                                 Broadcast Messages
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ sms_activities|dictsort:"created_at"|slice:":50"|filter_action:"sms_broadcast"|length }}
+                                {{ broadcast_count }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -142,7 +142,7 @@
                                 Order Assignment SMS
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ sms_activities|dictsort:"created_at"|slice:":50"|filter_action:"assign"|length }}
+                                {{ assign_count }}
                             </div>
                         </div>
                         <div class="col-auto">
